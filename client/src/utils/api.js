@@ -1,0 +1,51 @@
+const API_BASE = '/api';
+
+// 認証トークン付きfetchラッパー
+async function apiFetch(path, options = {}) {
+  const token = localStorage.getItem('grip_token');
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+
+  if (res.status === 401) {
+    localStorage.removeItem('grip_token');
+    window.location.href = '/login';
+    return;
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'APIエラー');
+  return data;
+}
+
+export const api = {
+  // 認証
+  login: (email, password) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  signup: (email, password) => apiFetch('/auth/signup', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  getProfile: () => apiFetch('/auth/profile'),
+
+  // LP
+  getLPs: () => apiFetch('/lp'),
+  generateLP: (params) => apiFetch('/lp/generate', { method: 'POST', body: JSON.stringify(params) }),
+  getLP: (id) => apiFetch(`/lp/${id}`),
+
+  // LINE友達
+  getFollowers: () => apiFetch('/line/followers'),
+  getFollower: (id) => apiFetch(`/line/followers/${id}`),
+
+  // AI
+  getClosingScore: (followerId) => apiFetch(`/ai/closing-score/${followerId}`),
+  handleObjection: (followerId, userMessage) =>
+    apiFetch('/ai/objection-handling', { method: 'POST', body: JSON.stringify({ followerId, userMessage }) }),
+
+  // 離脱検知
+  getChurnScores: () => apiFetch('/churn/scores'),
+  batchCalculate: () => apiFetch('/churn/scores/batch', { method: 'POST' }),
+  getRecoveryMessage: (followerId) =>
+    apiFetch('/churn/recovery-message', { method: 'POST', body: JSON.stringify({ followerId }) }),
+};
