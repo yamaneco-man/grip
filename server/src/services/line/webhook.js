@@ -54,6 +54,11 @@ async function handleFollow(event, userId) {
     return;
   }
 
+  // LP元の登録数をインクリメント（source_lp_idがある場合）
+  if (follower.source_lp_id) {
+    await supabaseAdmin.rpc('increment_registration', { lp_id: follower.source_lp_id }).catch(() => {});
+  }
+
   // 即時ウェルカムメッセージ送信
   try {
     const welcomeMsg = await generateWelcomeMessage(displayName, userId);

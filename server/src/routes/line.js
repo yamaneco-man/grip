@@ -1,20 +1,41 @@
 const express = require('express');
-const line = require('@line/bot-sdk');
+const crypto = require('crypto');
 const router = express.Router();
 const { lineConfig } = require('../config/line');
 const { handleWebhookEvent } = require('../services/line/webhook');
 const { authenticate } = require('../middleware/auth');
 const { supabaseAdmin } = require('../config/supabase');
 
-// LINE Webhook受信（LINE署名検証付き）
-router.post('/webhook', line.middleware(lineConfig), async (req, res) => {
-  // Webhookの場合、売り手のuser_idはLINEチャネルから逆引き
+// LINE署名検証（express.raw()で受け取ったbodyを手動検証）
+function verifyLineSignature(req) {
+  const signature = req.headers['x-line-signature'];
+  if (!signature) return false;
+
+  const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
+  const hash = crypto
+    .createHmac('SHA256', lineConfig.channelSecret)
+    .update(body)
+    .digest('base64');
+
+  return hash === signature;
+}
+
+// LINE Webhook受信（署名検証付き）
+router.post('/webhook', async (req, res) => {
+  // 署名検証
+  if (!verifyLineSignature(req)) {
+    return res.status(401).json({ error: '署名検証に失敗しました' });
+  }
+
+  // raw bodyをJSONにパース
+  const body = Buffer.isBuffer(req.body) ? JSON.parse(req.body.toString()) : req.body;
+
   // MVP: 環境変数で1売り手を設定
   const userId = process.env.DEFAULT_USER_ID;
 
   try {
     await Promise.all(
-      req.body.events.map(event => handleWebhookEvent(event, userId))
+      body.events.map(event => handleWebhookEvent(event, userId))
     );
     res.status(200).json({ status: 'ok' });
   } catch (err) {

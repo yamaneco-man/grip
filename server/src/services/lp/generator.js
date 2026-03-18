@@ -108,12 +108,12 @@ async function serveLPHtml(lpId) {
 
   if (error) throw error;
 
-  // PV数をインクリメント
-  await supabaseAdmin.rpc('increment_pv', { lp_id: lpId }).catch(() => {
-    // RPCが未定義の場合はフォールバック
-    supabaseAdmin
+  // PV数をアトミックにインクリメント
+  await supabaseAdmin.rpc('increment_pv', { lp_id: lpId }).catch(async () => {
+    // RPC未定義時のフォールバック（SQL直接実行）
+    await supabaseAdmin
       .from('lps')
-      .update({ pv_count: data.pv_count + 1 })
+      .update({ pv_count: (data.pv_count || 0) + 1 })
       .eq('id', lpId);
   });
 
