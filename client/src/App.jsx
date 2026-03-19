@@ -6,6 +6,7 @@ import LPList from './pages/LPList';
 import LPGenerate from './pages/LPGenerate';
 import Followers from './pages/Followers';
 import ChurnScores from './pages/ChurnScores';
+import Settings from './pages/Settings';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children }) {
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="lp/generate" element={<LPGenerate />} />
         <Route path="followers" element={<Followers />} />
         <Route path="churn" element={<ChurnScores />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>
   );

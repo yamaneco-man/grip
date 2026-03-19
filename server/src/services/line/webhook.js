@@ -1,6 +1,7 @@
 const { lineClient } = require('../../config/line');
 const { supabaseAdmin } = require('../../config/supabase');
 const { generateWelcomeMessage } = require('../ai/stepMessages');
+const { generateAutoReply } = require('../ai/autoReply');
 
 /**
  * LINE Webhookイベントの処理（設計書 第3章準拠）
@@ -34,6 +35,14 @@ async function handleFollow(event, userId) {
     console.error('プロフィール取得エラー:', e.message);
   }
 
+  // LP追跡: フォローイベントのパラメータからソースLPを特定
+  // LINE友達追加URL: https://lin.ee/xxx?lp={lp_id} or リッチメニューのpostback
+  let sourceLpId = null;
+  if (event.follow?.isUnblocked === false) {
+    // 初回フォロー時のみLP追跡（再フォローは除く）
+    sourceLpId = await resolveSourceLP(userId);
+  }
+
   // Supabaseに友達情報を保存
   const { data: follower, error } = await supabaseAdmin
     .from('line_followers')
@@ -41,6 +50,7 @@ async function handleFollow(event, userId) {
       user_id: userId,
       follower_line_id: followerLineId,
       display_name: displayName,
+      source_lp_id: sourceLpId,
       registered_at: new Date().toISOString(),
       is_blocked: false,
       blocked_at: null,
@@ -81,6 +91,22 @@ async function handleFollow(event, userId) {
 }
 
 /**
+ * ソースLP特定（直近に作成されたLPを紐づけ）
+ * MVPでは売り手の最新LPを自動紐づけ
+ */
+async function resolveSourceLP(userId) {
+  const { data: lp } = await supabaseAdmin
+    .from('lps')
+    .select('id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  return lp?.id || null;
+}
+
+/**
  * ブロック（友達解除）イベント処理
  */
 async function handleUnfollow(event, userId) {
@@ -97,6 +123,7 @@ async function handleUnfollow(event, userId) {
 
 /**
  * メッセージ受信イベント処理
+ * → メッセージ保存 → AI自動返信
  */
 async function handleMessage(event, userId) {
   if (event.message.type !== 'text') return;
@@ -126,6 +153,11 @@ async function handleMessage(event, userId) {
     .from('line_followers')
     .update({ last_replied_at: new Date().toISOString() })
     .eq('id', follower.id);
+
+  // AI自動返信（非同期で実行、エラーでもWebhookは200返す）
+  generateAutoReply(follower.id, content).catch(e => {
+    console.error('自動返信エラー:', e.message);
+  });
 }
 
 module.exports = { handleWebhookEvent };

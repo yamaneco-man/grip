@@ -69,6 +69,7 @@ app.use('/api/ai', require('./routes/ai'));
 app.use('/api/churn', require('./routes/churn'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/stripe', require('./routes/stripe'));
+app.use('/api/scheduler', require('./routes/scheduler'));
 
 // 本番環境: Reactビルド成果物を配信
 if (process.env.NODE_ENV === 'production') {

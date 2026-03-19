@@ -48,4 +48,9 @@ export const api = {
   batchCalculate: () => apiFetch('/churn/scores/batch', { method: 'POST' }),
   getRecoveryMessage: (followerId) =>
     apiFetch('/churn/recovery-message', { method: 'POST', body: JSON.stringify({ followerId }) }),
+
+  // Stripe / プラン
+  getPlans: () => apiFetch('/stripe/plans'),
+  getCurrentPlan: () => apiFetch('/stripe/current-plan'),
+  checkout: (plan) => apiFetch('/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan }) }),
 };

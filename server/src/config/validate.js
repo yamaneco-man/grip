@@ -16,6 +16,7 @@ const OPTIONAL_VARS = [
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
   'DEFAULT_USER_ID',
+  'SCHEDULER_API_KEY',
 ];
 
 function validateEnv() {
