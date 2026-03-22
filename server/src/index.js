@@ -59,7 +59,8 @@ app.get('/api/health', async (req, res) => {
   health.checks.stripe = process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.startsWith('your-') ? 'configured' : 'not configured';
 
   const hasErrors = Object.values(health.checks).some(v => v.toString().startsWith('error'));
-  res.status(hasErrors ? 503 : 200).json(health);
+  if (hasErrors) health.status = 'degraded';
+  res.status(200).json(health);
 });
 
 // ルート登録
