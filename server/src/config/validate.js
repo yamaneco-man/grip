@@ -13,8 +13,9 @@ const REQUIRED_VARS = [
 const OPTIONAL_VARS = [
   'PORT',
   'NODE_ENV',
-  'STRIPE_SECRET_KEY',
-  'STRIPE_WEBHOOK_SECRET',
+  'SQUARE_ACCESS_TOKEN',
+  'SQUARE_LOCATION_ID',
+  'SQUARE_WEBHOOK_SIGNATURE_KEY',
   'DEFAULT_USER_ID',
   'SCHEDULER_API_KEY',
 ];
@@ -43,9 +44,9 @@ function validateEnv() {
     console.warn('   → 本番環境では実際の値を設定してください');
   }
 
-  // Stripe（任意だが警告）
-  if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('your-')) {
-    console.warn('⚠️  STRIPE_SECRET_KEY 未設定: 決済機能は無効です');
+  // Square（任意だが警告）
+  if (!process.env.SQUARE_ACCESS_TOKEN || process.env.SQUARE_ACCESS_TOKEN.startsWith('your-')) {
+    console.warn('⚠️  SQUARE_ACCESS_TOKEN 未設定: 決済機能は無効です');
   }
 }
 

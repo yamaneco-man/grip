@@ -49,8 +49,8 @@ export const api = {
   getRecoveryMessage: (followerId) =>
     apiFetch('/churn/recovery-message', { method: 'POST', body: JSON.stringify({ followerId }) }),
 
-  // Stripe / プラン
-  getPlans: () => apiFetch('/stripe/plans'),
-  getCurrentPlan: () => apiFetch('/stripe/current-plan'),
-  checkout: (plan) => apiFetch('/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan }) }),
+  // 決済 / プラン
+  getPlans: () => apiFetch('/payment/plans'),
+  getCurrentPlan: () => apiFetch('/payment/current-plan'),
+  checkout: (plan) => apiFetch('/payment/checkout', { method: 'POST', body: JSON.stringify({ plan }) }),
 };

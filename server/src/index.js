@@ -56,7 +56,7 @@ app.get('/api/health', async (req, res) => {
   // 環境変数チェック
   health.checks.line = process.env.LINE_CHANNEL_ACCESS_TOKEN && !process.env.LINE_CHANNEL_ACCESS_TOKEN.startsWith('your-') ? 'configured' : 'not configured';
   health.checks.anthropic = process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.startsWith('your-') ? 'configured' : 'not configured';
-  health.checks.stripe = process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.startsWith('your-') ? 'configured' : 'not configured';
+  health.checks.square = process.env.SQUARE_ACCESS_TOKEN && !process.env.SQUARE_ACCESS_TOKEN.startsWith('your-') ? 'configured' : 'not configured';
 
   const hasErrors = Object.values(health.checks).some(v => v.toString().startsWith('error'));
   if (hasErrors) health.status = 'degraded';
@@ -69,7 +69,7 @@ app.use('/api/line', require('./routes/line'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/churn', require('./routes/churn'));
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/stripe', require('./routes/stripe'));
+app.use('/api/payment', require('./routes/payment'));
 app.use('/api/scheduler', require('./routes/scheduler'));
 
 // 本番環境: Reactビルド成果物を配信
