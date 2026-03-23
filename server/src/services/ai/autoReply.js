@@ -50,7 +50,7 @@ async function generateAutoReply(followerId, incomingMessage) {
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 400,
-    system: `あなたはLINE公式アカウントのAIアシスタントです。
+    system: `あなたはLINE公式アカウントの担当者です。
 友達からのメッセージに自然に返信してください。
 
 ルール：

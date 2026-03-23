@@ -20,7 +20,7 @@ async function generateWelcomeMessage(displayName, userId) {
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 300,
-    system: 'あなたはフレンドリーなLINE公式アカウントのAIアシスタントです。自然な口語体で、短く親しみやすいメッセージを書いてください。',
+    system: 'あなたはフレンドリーなLINE公式アカウントの担当者です。自然な口語体で、短く親しみやすいメッセージを書いてください。',
     messages: [{
       role: 'user',
       content: `以下の条件でLINE友達追加直後のウェルカムメッセージを1通だけ作成してください。

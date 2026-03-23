@@ -34,7 +34,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-purple-900">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold text-center text-indigo-900 mb-2">GRIP</h1>
-        <p className="text-center text-gray-500 mb-8">AI搭載LINEマーケティング</p>
+        <p className="text-center text-gray-500 mb-8">LINEマーケティング自動化</p>
 
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">{error}</div>

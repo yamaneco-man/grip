@@ -72,7 +72,7 @@ export default function Dashboard() {
             <span className="text-2xl">🚀</span>
             <div>
               <p className="font-medium text-gray-800">新しいLPを作成</p>
-              <p className="text-sm text-gray-500">商品情報を入力してAIがLPを自動生成</p>
+              <p className="text-sm text-gray-500">商品情報を入力してLPを自動生成</p>
             </div>
           </Link>
           <Link to="/churn"

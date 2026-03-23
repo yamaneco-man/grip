@@ -43,7 +43,7 @@ export default function LPGenerate() {
   return (
     <div className="max-w-2xl">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">LP自動生成</h2>
-      <p className="text-gray-500 mb-6">商品情報を入力すると、AIがLP全文をHTMLで自動生成します</p>
+      <p className="text-gray-500 mb-6">商品情報を入力すると、LP全文をHTMLで自動生成します</p>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 space-y-5">
         {fields.map(field => (
@@ -80,7 +80,7 @@ export default function LPGenerate() {
           disabled={loading}
           className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50"
         >
-          {loading ? 'AI生成中...（60〜90秒かかります）' : 'LPを自動生成する'}
+          {loading ? '生成中...（60〜90秒かかります）' : 'LPを自動生成する'}
         </button>
       </form>
     </div>
