@@ -24,7 +24,7 @@ LP → LINE登録 → 購買クロージング → 離脱防止の全工程を1�
 - **メッセージング**: LINE Messaging API
 - **ワークフロー**: n8n
 - **フロントエンド**: React (Vite)
-- **決済**: Stripe
+- **決済**: Square
 - **認証**: Supabase Auth
 
 ## ディレクトリ構成
@@ -40,7 +40,8 @@ grip/
 │       │   ├── line.js      # LINE Webhook・友達管理
 │       │   ├── ai.js        # クロージングAI・ステップ配信
 │       │   ├── churn.js     # 離脱検知・復活メッセージ
-│       │   └── auth.js      # 認証
+│       │   ├── auth.js      # 認証
+│       │   └── payment.js   # Square決済・プラン管理
 │       ├── middleware/       # 認証ミドルウェア等
 │       ├── services/        # ビジネスロジック
 │       └── utils/           # ユーティリティ

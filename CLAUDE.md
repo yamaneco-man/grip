@@ -17,7 +17,7 @@
 - AI: Claude API (Anthropic)
 - メッセージング: LINE Messaging API
 - フロントエンド: React (Vite)
-- 決済: Stripe
+- 決済: Square
 - 認証: Supabase Auth
 
 ## コスト方針

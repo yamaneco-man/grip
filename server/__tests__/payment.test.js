@@ -23,10 +23,10 @@ jest.mock('../src/config/anthropic', () => ({
 
 const app = require('../src/index');
 
-describe('Stripe API', () => {
-  describe('GET /api/stripe/plans', () => {
+describe('Payment API (Square)', () => {
+  describe('GET /api/payment/plans', () => {
     test('プラン一覧を返す', async () => {
-      const res = await request(app).get('/api/stripe/plans');
+      const res = await request(app).get('/api/payment/plans');
       expect(res.status).toBe(200);
       expect(res.body.free).toBeDefined();
       expect(res.body.standard).toBeDefined();
@@ -36,15 +36,15 @@ describe('Stripe API', () => {
     });
   });
 
-  describe('POST /api/stripe/checkout', () => {
-    test('Stripe未設定時は503を返す', async () => {
+  describe('POST /api/payment/checkout', () => {
+    test('Square未設定時は503を返す', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } },
         error: null,
       });
 
       const res = await request(app)
-        .post('/api/stripe/checkout')
+        .post('/api/payment/checkout')
         .set('Authorization', 'Bearer valid-token')
         .send({ plan: 'standard' });
 
@@ -53,9 +53,9 @@ describe('Stripe API', () => {
     });
   });
 
-  describe('GET /api/stripe/current-plan', () => {
+  describe('GET /api/payment/current-plan', () => {
     test('認証なしで401を返す', async () => {
-      const res = await request(app).get('/api/stripe/current-plan');
+      const res = await request(app).get('/api/payment/current-plan');
       expect(res.status).toBe(401);
     });
   });
