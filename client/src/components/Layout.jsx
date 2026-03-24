@@ -7,7 +7,6 @@ const navItems = [
   { path: '/lp', label: 'LP管理', icon: '📄' },
   { path: '/followers', label: 'LINE友達', icon: '👥' },
   { path: '/churn', label: '離脱検知', icon: '🔔' },
-  { path: '/step-config', label: 'ステップ設計', icon: '📝' },
   { path: '/settings', label: '設定', icon: '⚙️' },
 ];
 

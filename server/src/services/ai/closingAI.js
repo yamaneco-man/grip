@@ -76,7 +76,7 @@ async function generateObjectionHandling(followerId, userMessage) {
   const { data: user } = await supabaseAdmin
     .from('users').select('plan').eq('id', follower.user_id).single();
   const plan = user?.plan || 'free';
-  if (plan === 'free' || plan === 'standard') {
+  if (plan === 'free' || plan === 'standard' || plan === 'monitor') {
     return [{ pattern: 'A', message: '反論処理はPROプラン以上でご利用いただけます。' }];
   }
 

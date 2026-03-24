@@ -23,7 +23,7 @@ const STEP_TEMPLATES = {
 // FREE: なし、STANDARD: 週次(日曜のみ)、PRO: 日次、VIP: 日次
 function shouldRunChurn(plan) {
   if (plan === 'free') return false;
-  if (plan === 'standard') return new Date().getDay() === 0; // 日曜のみ
+  if (plan === 'standard' || plan === 'monitor') return new Date().getDay() === 0; // 日曜のみ
   return true; // pro, vip は毎日
 }
 
@@ -90,7 +90,7 @@ router.post('/step-delivery', requireSchedulerKey, async (req, res) => {
       try {
         // プラン別メッセージ生成: STANDARDは固定テンプレ、PRO/VIPはAI生成
         let message;
-        if (userPlan === 'standard') {
+        if (userPlan === 'standard' || userPlan === 'monitor') {
           const { data: lp } = await supabaseAdmin
             .from('lps').select('product_name').eq('user_id', follower.user_id)
             .order('created_at', { ascending: false }).limit(1).single();

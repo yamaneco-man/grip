@@ -123,7 +123,7 @@ export default function ObjectionHandling() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {Object.entries(PATTERN_LABELS).map(([key, label]) => {
                   const pattern = Array.isArray(results)
-                    ? results.find(r => r.type === key || r.label === key)
+                    ? results.find(r => r.pattern === key || r.type === key || r.label === key)
                     : results[key];
                   const text = pattern?.message || pattern?.text || pattern || '';
 

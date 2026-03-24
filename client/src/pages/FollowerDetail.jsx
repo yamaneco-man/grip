@@ -90,8 +90,8 @@ export default function FollowerDetail() {
               <div>
                 <p className="text-gray-500">ステップ日</p>
                 <p className="font-medium text-gray-800">
-                  {follower.step_date
-                    ? new Date(follower.step_date).toLocaleDateString('ja-JP')
+                  {follower.step_day != null
+                    ? `Day ${follower.step_day}`
                     : '-'}
                 </p>
               </div>
@@ -137,8 +137,8 @@ export default function FollowerDetail() {
                           msg.direction === 'out' ? 'text-indigo-200' : 'text-gray-400'
                         }`}
                       >
-                        {msg.sent_at
-                          ? new Date(msg.sent_at).toLocaleString('ja-JP', {
+                        {msg.created_at
+                          ? new Date(msg.created_at).toLocaleString('ja-JP', {
                               month: 'numeric',
                               day: 'numeric',
                               hour: '2-digit',
