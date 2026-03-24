@@ -14,6 +14,7 @@ if (process.env.SQUARE_ACCESS_TOKEN && !process.env.SQUARE_ACCESS_TOKEN.startsWi
 // GRIPプラン定義
 const PLANS = {
   free: { name: 'FREE', price: 0, lpLimit: 3, followerLimit: 50 },
+  monitor: { name: 'MONITOR', price: 4980, lpLimit: null, followerLimit: 500 },
   standard: { name: 'STANDARD', price: 9800, lpLimit: null, followerLimit: 500 },
   pro: { name: 'PRO', price: 29800, lpLimit: null, followerLimit: null },
   vip: { name: 'VIP', price: 98000, lpLimit: null, followerLimit: null },

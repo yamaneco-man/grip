@@ -33,6 +33,8 @@ export const api = {
   getLPs: () => apiFetch('/lp'),
   generateLP: (params) => apiFetch('/lp/generate', { method: 'POST', body: JSON.stringify(params) }),
   getLP: (id) => apiFetch(`/lp/${id}`),
+  updateLP: (id, data) => apiFetch(`/lp/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteLP: (id) => apiFetch(`/lp/${id}`, { method: 'DELETE' }),
 
   // LINE友達
   getFollowers: () => apiFetch('/line/followers'),

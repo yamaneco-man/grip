@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
 const { checkLPLimit } = require('../middleware/planLimit');
-const { createLP, getLPs, getLP, serveLPHtml } = require('../services/lp/generator');
+const { createLP, getLPs, getLP, serveLPHtml, updateLP, deleteLP } = require('../services/lp/generator');
 
 // LP一覧取得（認証必須）
 router.get('/', authenticate, async (req, res) => {
@@ -47,6 +47,29 @@ router.get('/:id', authenticate, async (req, res) => {
     res.json(lp);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// LP更新（認証必須・メタ情報のみ、HTML再生成なし）
+router.put('/:id', authenticate, async (req, res) => {
+  try {
+    const { productName, price, target, strengths, reviews, lineUrl } = req.body;
+    const lp = await updateLP(req.params.id, req.user.id, { productName, price, target, strengths, reviews, lineUrl });
+    res.json(lp);
+  } catch (err) {
+    const status = err.message.includes('権限') ? 403 : err.message.includes('見つかりません') ? 404 : 500;
+    res.status(status).json({ error: err.message });
+  }
+});
+
+// LP削除（認証必須・自分のLPのみ）
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const result = await deleteLP(req.params.id, req.user.id);
+    res.json(result);
+  } catch (err) {
+    const status = err.message.includes('権限') ? 403 : err.message.includes('見つかりません') ? 404 : 500;
+    res.status(status).json({ error: err.message });
   }
 });
 

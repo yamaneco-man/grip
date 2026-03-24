@@ -3,6 +3,7 @@ import { api } from '../utils/api';
 
 const PLAN_COLORS = {
   free: 'border-gray-300',
+  monitor: 'border-green-500',
   standard: 'border-blue-500',
   pro: 'border-purple-500',
   vip: 'border-yellow-500',
@@ -10,6 +11,7 @@ const PLAN_COLORS = {
 
 const PLAN_BADGES = {
   free: 'bg-gray-100 text-gray-700',
+  monitor: 'bg-green-100 text-green-700',
   standard: 'bg-blue-100 text-blue-700',
   pro: 'bg-purple-100 text-purple-700',
   vip: 'bg-yellow-100 text-yellow-700',
@@ -57,11 +59,12 @@ export default function Settings() {
 
   if (loading) return <p className="text-gray-500">読み込み中...</p>;
 
-  const planOrder = ['free', 'standard', 'pro', 'vip'];
+  const planOrder = ['free', 'monitor', 'standard', 'pro', 'vip'];
   const currentIndex = planOrder.indexOf(currentPlan?.plan || 'free');
 
   const features = {
     free: ['LP生成 3件/月', 'LINE追跡 50人', 'ダッシュボード'],
+    monitor: ['LP生成 無制限', 'LINE追跡 500人', '固定テンプレステップ配信', '週次離脱検知', '自動返信', '先着30名限定モニター価格'],
     standard: ['LP生成 無制限', 'LINE追跡 500人', '固定テンプレステップ配信', '週次離脱検知', '自動返信'],
     pro: ['LP生成 無制限', 'LINE追跡 無制限', 'ステップ自動生成', '日次離脱検知', '反論処理', '自動返信'],
     vip: ['全機能無制限', 'カスタムステップ設計', 'リアルタイム離脱検知', '優先サポート', '専用コンサルティング'],
@@ -91,7 +94,7 @@ export default function Settings() {
 
       {/* プラン選択 */}
       <h3 className="text-lg font-bold text-gray-800 mb-4">プラン</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {plans && planOrder.map((key, index) => {
           const plan = plans[key];
           const isCurrent = key === (currentPlan?.plan || 'free');

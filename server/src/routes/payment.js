@@ -23,7 +23,7 @@ router.post('/checkout', authenticate, requireSquare, async (req, res) => {
   try {
     const { plan } = req.body;
     if (!plan || !PLANS[plan] || plan === 'free') {
-      return res.status(400).json({ error: '有効なプランを指定してください（standard, pro, vip）' });
+      return res.status(400).json({ error: '有効なプランを指定してください（monitor, standard, pro, vip）' });
     }
 
     const locationId = process.env.SQUARE_LOCATION_ID;
@@ -72,6 +72,11 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   const webhookSecret = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
 
   // 署名検証
+  if (process.env.NODE_ENV === 'production' && !webhookSecret) {
+    console.error('Square Webhook署名キーが未設定です');
+    return res.status(503).json({ error: 'Webhook署名検証が設定されていません' });
+  }
+
   if (webhookSecret && signature) {
     const notificationUrl = `${process.env.SQUARE_WEBHOOK_URL || ''}/api/payment/webhook`;
     const body = typeof req.body === 'string' ? req.body : req.body.toString('utf8');

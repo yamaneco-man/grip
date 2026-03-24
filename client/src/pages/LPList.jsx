@@ -6,12 +6,27 @@ export default function LPList() {
   const [lps, setLps] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  function loadLPs() {
+    setLoading(true);
     api.getLPs()
       .then(setLps)
       .catch(console.error)
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadLPs();
   }, []);
+
+  async function handleDelete(lp) {
+    if (!window.confirm(`「${lp.product_name}」を削除しますか？この操作は取り消せません。`)) return;
+    try {
+      await api.deleteLP(lp.id);
+      loadLPs();
+    } catch (err) {
+      alert('削除に失敗しました: ' + err.message);
+    }
+  }
 
   if (loading) return <p className="text-gray-500">読み込み中...</p>;
 
@@ -59,6 +74,12 @@ export default function LPList() {
                 >
                   プレビュー
                 </a>
+                <button
+                  onClick={() => handleDelete(lp)}
+                  className="px-3 py-1 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50"
+                >
+                  削除
+                </button>
               </div>
             </div>
           ))}

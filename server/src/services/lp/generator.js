@@ -120,4 +120,59 @@ async function serveLPHtml(lpId) {
   return data.html_content;
 }
 
-module.exports = { generateLP, createLP, getLPs, getLP, serveLPHtml };
+/**
+ * LPメタ情報更新（HTML再生成なし）
+ */
+async function updateLP(lpId, userId, params) {
+  // 自分のLPのみ更新可能
+  const { data: existing, error: findError } = await supabaseAdmin
+    .from('lps')
+    .select('id, user_id')
+    .eq('id', lpId)
+    .single();
+
+  if (findError) throw new Error('LPが見つかりません');
+  if (existing.user_id !== userId) throw new Error('このLPを編集する権限がありません');
+
+  const updateData = {};
+  if (params.productName !== undefined) updateData.product_name = params.productName;
+  if (params.price !== undefined) updateData.price = params.price ? parseInt(params.price) : null;
+  if (params.target !== undefined) updateData.target = params.target;
+  if (params.strengths !== undefined) updateData.strengths = params.strengths;
+  if (params.reviews !== undefined) updateData.reviews = params.reviews;
+  if (params.lineUrl !== undefined) updateData.line_url = params.lineUrl;
+
+  const { data, error } = await supabaseAdmin
+    .from('lps')
+    .update(updateData)
+    .eq('id', lpId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * LP削除（自分のLPのみ）
+ */
+async function deleteLP(lpId, userId) {
+  const { data: existing, error: findError } = await supabaseAdmin
+    .from('lps')
+    .select('id, user_id')
+    .eq('id', lpId)
+    .single();
+
+  if (findError) throw new Error('LPが見つかりません');
+  if (existing.user_id !== userId) throw new Error('このLPを削除する権限がありません');
+
+  const { error } = await supabaseAdmin
+    .from('lps')
+    .delete()
+    .eq('id', lpId);
+
+  if (error) throw error;
+  return { success: true };
+}
+
+module.exports = { generateLP, createLP, getLPs, getLP, serveLPHtml, updateLP, deleteLP };

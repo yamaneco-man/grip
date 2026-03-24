@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 
 export default function Followers() {
@@ -50,7 +51,11 @@ export default function Followers() {
                 const closingProb = f.closing_scores?.[0]?.probability;
                 return (
                   <tr key={f.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium text-gray-800">{f.display_name || '不明'}</td>
+                    <td className="px-6 py-4 font-medium">
+                      <Link to={`/followers/${f.id}`} className="text-indigo-600 hover:text-indigo-800 hover:underline transition">
+                        {f.display_name || '不明'}
+                      </Link>
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {new Date(f.registered_at).toLocaleDateString('ja-JP')}
                     </td>

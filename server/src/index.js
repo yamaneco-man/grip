@@ -16,7 +16,10 @@ const PORT = process.env.PORT || 3001;
 
 // ミドルウェア設定
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'https://grip-api-production.up.railway.app',
+  credentials: true,
+}));
 app.use(morgan('dev'));
 
 // レート制限（API保護）
