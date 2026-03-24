@@ -1,0 +1,83 @@
+const { supabaseAdmin } = require('../config/supabase');
+const { PLANS } = require('../config/square');
+
+// LP生成数の制限チェック
+async function checkLPLimit(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    // ユーザーのプラン取得
+    const { data: user, error: userErr } = await supabaseAdmin
+      .from('users')
+      .select('plan')
+      .eq('id', userId)
+      .single();
+
+    if (userErr) throw userErr;
+
+    const plan = PLANS[user.plan || 'free'];
+    if (!plan.lpLimit) return next(); // 無制限
+
+    // 今月のLP生成数をカウント
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const { count, error: countErr } = await supabaseAdmin
+      .from('lps')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', monthStart);
+
+    if (countErr) throw countErr;
+
+    if (count >= plan.lpLimit) {
+      return res.status(403).json({
+        error: `${plan.name}プランのLP生成上限（月${plan.lpLimit}件）に達しました。アップグレードしてください。`,
+      });
+    }
+
+    next();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// LINEフォロワー数の制限チェック
+async function checkFollowerLimit(req, res, next) {
+  try {
+    const userId = req.user?.id || process.env.DEFAULT_USER_ID;
+    if (!userId) return next();
+
+    // ユーザーのプラン取得
+    const { data: user, error: userErr } = await supabaseAdmin
+      .from('users')
+      .select('plan')
+      .eq('id', userId)
+      .single();
+
+    if (userErr) throw userErr;
+
+    const plan = PLANS[user.plan || 'free'];
+    if (!plan.followerLimit) return next(); // 無制限
+
+    // 現在のフォロワー数をカウント
+    const { count, error: countErr } = await supabaseAdmin
+      .from('line_followers')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (countErr) throw countErr;
+
+    if (count >= plan.followerLimit) {
+      return res.status(403).json({
+        error: `${plan.name}プランのLINE追跡上限（${plan.followerLimit}人）に達しました。アップグレードしてください。`,
+      });
+    }
+
+    next();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { checkLPLimit, checkFollowerLimit };

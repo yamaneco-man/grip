@@ -2,6 +2,7 @@ const { lineClient } = require('../../config/line');
 const { supabaseAdmin } = require('../../config/supabase');
 const { generateWelcomeMessage } = require('../ai/stepMessages');
 const { generateAutoReply } = require('../ai/autoReply');
+const { PLANS } = require('../../config/square');
 
 /**
  * LINE Webhookイベントの処理（設計書 第3章準拠）
@@ -25,6 +26,22 @@ async function handleWebhookEvent(event, userId) {
  */
 async function handleFollow(event, userId) {
   const followerLineId = event.source.userId;
+
+  // プランのフォロワー数制限チェック
+  const { data: user } = await supabaseAdmin
+    .from('users').select('plan').eq('id', userId).single();
+  const plan = PLANS[user?.plan || 'free'];
+  if (plan.followerLimit) {
+    const { count } = await supabaseAdmin
+      .from('line_followers')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_blocked', false);
+    if (count >= plan.followerLimit) {
+      console.log(`フォロワー上限到達: ${count}/${plan.followerLimit} (${plan.name})`);
+      return;
+    }
+  }
 
   // LINEプロフィール取得
   let displayName = '友達';

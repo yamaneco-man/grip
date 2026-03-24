@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
+const { checkLPLimit } = require('../middleware/planLimit');
 const { createLP, getLPs, getLP, serveLPHtml } = require('../services/lp/generator');
 
 // LP一覧取得（認証必須）
@@ -13,8 +14,8 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-// LP生成（認証必須）
-router.post('/generate', authenticate, async (req, res) => {
+// LP生成（認証必須・プラン制限チェック）
+router.post('/generate', authenticate, checkLPLimit, async (req, res) => {
   try {
     const { productName, price, target, strengths, reviews, lineUrl } = req.body;
     if (!productName || !target) {
