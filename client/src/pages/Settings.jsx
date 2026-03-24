@@ -143,6 +143,27 @@ export default function Settings() {
           );
         })}
       </div>
+
+      {/* VIPサポート */}
+      {currentPlan?.plan === 'vip' && (
+        <div className="bg-yellow-50 rounded-xl border-2 border-yellow-300 p-6 mt-8">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">🌟 VIPサポート</h3>
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm text-gray-500">専用LINE</p>
+              <a href="https://lin.ee/xxxxx" className="text-blue-600 hover:underline font-medium">VIP専用LINEで相談する</a>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">コンサルティング予約</p>
+              <a href="#" className="text-blue-600 hover:underline font-medium">月次コンサルを予約する</a>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">優先サポート</p>
+              <p className="text-sm text-gray-700">VIPメンバーのお問い合わせは24時間以内に回答します</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -51,6 +51,11 @@ export const api = {
   getRecoveryMessage: (followerId) =>
     apiFetch('/churn/recovery-message', { method: 'POST', body: JSON.stringify({ followerId }) }),
 
+  // ステップ設計（VIP専用）
+  getStepConfig: () => apiFetch('/step-config'),
+  updateStepConfig: (day, data) => apiFetch(`/step-config/${day}`, { method: 'PUT', body: JSON.stringify(data) }),
+  resetStepConfig: () => apiFetch('/step-config/reset', { method: 'POST' }),
+
   // 決済 / プラン
   getPlans: () => apiFetch('/payment/plans'),
   getCurrentPlan: () => apiFetch('/payment/current-plan'),

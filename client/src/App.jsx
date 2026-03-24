@@ -9,6 +9,7 @@ import ChurnScores from './pages/ChurnScores';
 import Settings from './pages/Settings';
 import FollowerDetail from './pages/FollowerDetail';
 import ObjectionHandling from './pages/ObjectionHandling';
+import StepConfig from './pages/StepConfig';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children }) {
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="followers/:id" element={<FollowerDetail />} />
         <Route path="followers/:id/objection" element={<ObjectionHandling />} />
         <Route path="churn" element={<ChurnScores />} />
+        <Route path="step-config" element={<StepConfig />} />
         <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>

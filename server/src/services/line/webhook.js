@@ -158,11 +158,13 @@ async function handleMessage(event, userId) {
 
   if (!follower) return;
 
-  // メッセージをログに保存
+  // メッセージをログに保存（感情スコア付き）
+  const emotionScore = calculateEmotionScore(content);
   await supabaseAdmin.from('messages').insert({
     follower_id: follower.id,
     direction: 'in',
     content,
+    emotion_score: emotionScore,
   });
 
   // 最終返信日時を更新
@@ -175,6 +177,39 @@ async function handleMessage(event, userId) {
   generateAutoReply(follower.id, content).catch(e => {
     console.error('自動返信エラー:', e.message);
   });
+
+  // VIPプラン: リアルタイム離脱検知
+  const { data: seller } = await supabaseAdmin
+    .from('users').select('plan').eq('id', userId).single();
+  if (seller?.plan === 'vip') {
+    const { calculateChurnScore } = require('../churn/detector');
+    calculateChurnScore(follower.id).then(async (result) => {
+      if (result.score >= 80) {
+        console.log(`[VIP リアルタイムアラート] スコア${result.score} (follower: ${follower.id})`);
+        // アラートフラグを更新（Dashboard表示用）
+        await supabaseAdmin
+          .from('churn_scores')
+          .update({ alerted: true, alert_type: 'realtime' })
+          .eq('follower_id', follower.id)
+          .order('calculated_at', { ascending: false })
+          .limit(1);
+      }
+    }).catch(e => console.error('リアルタイム離脱検知エラー:', e.message));
+  }
 }
 
-module.exports = { handleWebhookEvent };
+/**
+ * キーワードベースの感情スコア計算（-100〜100）
+ * Claude API呼び出しを増やさないシンプルな分析
+ */
+function calculateEmotionScore(text) {
+  const positive = ['ありがとう', 'うれしい', '嬉しい', '楽しい', 'いいね', '最高', '素敵', '助かる', '感謝', '気になる', '興味', 'やりたい', '欲しい', 'ほしい'];
+  const negative = ['いらない', '不要', '高い', '無理', 'やめ', 'うざい', 'しつこい', '迷惑', '解除', 'ブロック', '退会', 'いいです', '結構です', '大丈夫です'];
+
+  let score = 0;
+  positive.forEach(w => { if (text.includes(w)) score += 20; });
+  negative.forEach(w => { if (text.includes(w)) score -= 20; });
+  return Math.max(-100, Math.min(100, score));
+}
+
+module.exports = { handleWebhookEvent, calculateEmotionScore };

@@ -1,17 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 const navItems = [
   { path: '/', label: 'ダッシュボード', icon: '📊' },
   { path: '/lp', label: 'LP管理', icon: '📄' },
   { path: '/followers', label: 'LINE友達', icon: '👥' },
   { path: '/churn', label: '離脱検知', icon: '🔔' },
+  { path: '/step-config', label: 'ステップ設計', icon: '📝' },
   { path: '/settings', label: '設定', icon: '⚙️' },
 ];
 
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [plan, setPlan] = useState(null);
+
+  useEffect(() => {
+    api.getProfile()
+      .then(data => setPlan(data?.plan))
+      .catch(() => {});
+  }, []);
+
+  const isVip = plan === 'vip';
 
   const handleLogout = () => {
     localStorage.removeItem('grip_token');
@@ -41,6 +52,28 @@ export default function Layout() {
               <span>{item.label}</span>
             </Link>
           ))}
+
+          {/* ステップ設計 - VIP専用 */}
+          {isVip ? (
+            <Link
+              to="/step-config"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                location.pathname === '/step-config'
+                  ? 'bg-indigo-700 text-white'
+                  : 'text-indigo-300 hover:bg-indigo-800 hover:text-white'
+              }`}
+            >
+              <span>🎯</span>
+              <span>ステップ設計</span>
+              <span className="ml-auto text-xs bg-yellow-500 text-white px-1.5 py-0.5 rounded">VIP</span>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-indigo-500 cursor-not-allowed opacity-50">
+              <span>🎯</span>
+              <span>ステップ設計</span>
+              <span className="ml-auto text-xs">🔒</span>
+            </div>
+          )}
         </nav>
         <div className="p-4 border-t border-indigo-800">
           <button

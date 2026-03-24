@@ -4,6 +4,7 @@ const { supabaseAdmin } = require('../config/supabase');
 const { lineClient } = require('../config/line');
 const { generateStepMessage } = require('../services/ai/stepMessages');
 const { batchCalculateChurnScores } = require('../services/churn/detector');
+const { calculateClosingScore } = require('../services/ai/closingAI');
 const { PLANS } = require('../config/square');
 
 // ステップ配信のプラン別対象判定
@@ -70,6 +71,20 @@ router.post('/step-delivery', requireSchedulerKey, async (req, res) => {
         continue;
       }
 
+      // 冪等性チェック: 今日すでに配信済みならスキップ
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayMsg } = await supabaseAdmin
+        .from('messages')
+        .select('id')
+        .eq('follower_id', follower.id)
+        .eq('direction', 'out')
+        .gte('created_at', today + 'T00:00:00Z')
+        .limit(1);
+      if (todayMsg && todayMsg.length > 0) {
+        results.push({ followerId: follower.id, name: follower.display_name, status: 'skipped', reason: '配信済み' });
+        continue;
+      }
+
       const nextDay = follower.step_day + 1;
 
       try {
@@ -82,6 +97,18 @@ router.post('/step-delivery', requireSchedulerKey, async (req, res) => {
           message = (STEP_TEMPLATES[nextDay] || STEP_TEMPLATES[1])
             .replace('{name}', follower.display_name)
             .replace('{product}', lp?.product_name || 'サービス');
+        } else if (userPlan === 'vip') {
+          // VIPユーザー: カスタムステップ設定を読み込み
+          const { data: customConfig } = await supabaseAdmin
+            .from('custom_step_configs')
+            .select('purpose, tone, custom_prompt, enabled')
+            .eq('user_id', follower.user_id)
+            .eq('day', nextDay)
+            .single();
+
+          // カスタム設定があり有効な場合はそれを使用、なければデフォルトAI生成
+          const config = (customConfig && customConfig.enabled) ? customConfig : null;
+          message = await generateStepMessage(follower.id, nextDay, config);
         } else {
           message = await generateStepMessage(follower.id, nextDay);
         }
@@ -156,9 +183,85 @@ router.post('/churn-batch', requireSchedulerKey, async (req, res) => {
       }
     }
 
+    // 古いスコアのクリーンアップ（30日以上前）
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    await supabaseAdmin
+      .from('churn_scores')
+      .delete()
+      .lt('calculated_at', thirtyDaysAgo);
+
     res.json({
       executed: new Date().toISOString(),
       users: users?.length || 0,
+      results: allResults,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * 全ユーザーの成約スコアバッチ計算
+ * n8nから毎日昼に呼び出す: POST /api/scheduler/closing-batch
+ * PRO以上のプランのみ実行（FREE・STANDARDはスキップ）
+ */
+router.post('/closing-batch', requireSchedulerKey, async (req, res) => {
+  try {
+    // 全ユーザーを取得（プラン情報付き）
+    const { data: users, error } = await supabaseAdmin
+      .from('users')
+      .select('id, plan');
+
+    if (error) throw error;
+
+    const allResults = [];
+    for (const user of (users || [])) {
+      const plan = user.plan || 'free';
+
+      // FREE・STANDARDはスキップ
+      if (plan === 'free' || plan === 'standard') {
+        allResults.push({ userId: user.id, plan, status: 'skipped', reason: 'PRO以上のプランが必要' });
+        continue;
+      }
+
+      try {
+        // ユーザーの全友達を取得
+        const { data: followers } = await supabaseAdmin
+          .from('line_followers')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('is_blocked', false);
+
+        let calculated = 0;
+        let errors = 0;
+        for (const follower of (followers || [])) {
+          try {
+            await calculateClosingScore(follower.id);
+            calculated++;
+          } catch (e) {
+            console.error(`成約スコア計算エラー (follower: ${follower.id}):`, e.message);
+            errors++;
+          }
+        }
+
+        allResults.push({
+          userId: user.id,
+          plan,
+          followers: followers?.length || 0,
+          calculated,
+          errors,
+        });
+      } catch (e) {
+        console.error(`成約スコアバッチエラー (${user.id}):`, e.message);
+        allResults.push({ userId: user.id, plan, error: e.message });
+      }
+    }
+
+    res.json({
+      executed: new Date().toISOString(),
+      users: users?.length || 0,
+      processed: allResults.filter(r => !r.status).length,
+      skipped: allResults.filter(r => r.status === 'skipped').length,
       results: allResults,
     });
   } catch (err) {

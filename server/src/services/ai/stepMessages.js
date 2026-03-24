@@ -42,7 +42,7 @@ async function generateWelcomeMessage(displayName, userId) {
  * ステップ配信メッセージ生成（Day1〜Day7）
  * 設計書 第3章 3-2のステップ設計に準拠
  */
-async function generateStepMessage(followerId, day) {
+async function generateStepMessage(followerId, day, customConfig = null) {
   const { data: follower } = await supabaseAdmin
     .from('line_followers')
     .select('display_name, user_id')
@@ -82,15 +82,29 @@ async function generateStepMessage(followerId, day) {
     7: 'オファー終了のリマインド。損失回避による最終クロージング。',
   };
 
+  // カスタム設定がある場合はそのpurpose/tone/custom_promptを使用
+  const purpose = customConfig?.purpose || dayPrompts[day] || '価値提供とフォローアップ';
+  const tone = customConfig?.tone || 'friendly';
+  const toneLabels = {
+    friendly: 'フレンドリーで親しみやすい',
+    professional: 'プロフェッショナルで信頼感のある',
+    casual: 'カジュアルで気さくな',
+    urgent: '緊急性を感じさせる',
+  };
+  const toneInstruction = toneLabels[tone] || toneLabels.friendly;
+  const customPromptSection = customConfig?.custom_prompt
+    ? `\n追加指示: ${customConfig.custom_prompt}`
+    : '';
+
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 500,
-    system: `あなたはLINEマーケティングの専門家です。自然な口語体のLINEメッセージを作成してください。300文字以内。`,
+    system: `あなたはLINEマーケティングの専門家です。${toneInstruction}口調のLINEメッセージを作成してください。300文字以内。`,
     messages: [{
       role: 'user',
       content: `Day${day}のステップ配信メッセージを作成してください。
 
-目的: ${dayPrompts[day] || '価値提供とフォローアップ'}
+目的: ${purpose}
 友達の名前: ${follower.display_name}
 商品名: ${lp?.product_name || 'サービス'}
 価格: ${lp?.price || '未設定'}
@@ -98,7 +112,7 @@ async function generateStepMessage(followerId, day) {
 強み: ${lp?.strengths || '未設定'}
 
 これまでの会話:
-${chatHistory || '(なし)'}`,
+${chatHistory || '(なし)'}${customPromptSection}`,
     }],
   });
 
