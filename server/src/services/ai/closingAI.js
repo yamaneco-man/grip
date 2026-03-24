@@ -1,5 +1,6 @@
 const { anthropic } = require('../../config/anthropic');
 const { supabaseAdmin } = require('../../config/supabase');
+const { PLANS } = require('../../config/square');
 
 /**
  * 成約確率スコアを計算（設計書 第4章準拠）
@@ -70,6 +71,14 @@ async function generateObjectionHandling(followerId, userMessage) {
     .select('display_name, user_id')
     .eq('id', followerId)
     .single();
+
+  // プランチェック: PRO以上のみ利用可
+  const { data: user } = await supabaseAdmin
+    .from('users').select('plan').eq('id', follower.user_id).single();
+  const plan = user?.plan || 'free';
+  if (plan === 'free' || plan === 'standard') {
+    return [{ pattern: 'A', message: '反論処理はPROプラン以上でご利用いただけます。' }];
+  }
 
   // 商品情報取得
   const { data: lp } = await supabaseAdmin
