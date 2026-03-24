@@ -29,9 +29,10 @@ export default function Dashboard() {
         try {
           const churnData = await api.getChurnScores();
           const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-          realtimeAlerts = (churnData || []).filter(s =>
-            s.alerted && s.score >= 80 && s.calculated_at >= oneDayAgo
-          ).length;
+          realtimeAlerts = (churnData || []).filter(s => {
+            const cs = s.churn_scores?.[0];
+            return cs?.alerted && cs.score >= 80 && cs.calculated_at >= oneDayAgo;
+          }).length;
         } catch (e) {
           console.error('リアルタイムアラート取得エラー:', e);
         }

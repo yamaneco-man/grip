@@ -9,7 +9,7 @@ router.get('/scores', authenticate, async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('line_followers')
-      .select('id, display_name, follower_line_id, churn_scores(score, score_detail_json, calculated_at)')
+      .select('id, display_name, follower_line_id, churn_scores(score, score_detail_json, calculated_at, alerted)')
       .eq('user_id', req.user.id)
       .eq('is_blocked', false)
       .order('registered_at', { ascending: false });
