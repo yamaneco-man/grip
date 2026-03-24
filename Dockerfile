@@ -3,9 +3,9 @@ FROM node:20-alpine AS client-build
 
 WORKDIR /app/client
 COPY client/package*.json ./
-RUN npm ci
+RUN npm ci --maxsockets 1
 COPY client/ ./
-RUN npm run build
+RUN NODE_OPTIONS="--max-old-space-size=512" npm run build
 
 FROM node:20-alpine
 
