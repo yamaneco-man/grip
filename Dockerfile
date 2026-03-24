@@ -1,11 +1,13 @@
 # GRIP - マルチステージビルド
 FROM node:20-alpine AS client-build
 
+ENV NODE_OPTIONS="--max-old-space-size=256"
+
 WORKDIR /app/client
 COPY client/package*.json ./
-RUN npm ci --maxsockets 1
+RUN npm install --prefer-offline --no-audit --no-fund
 COPY client/ ./
-RUN NODE_OPTIONS="--max-old-space-size=512" npm run build
+RUN npm run build
 
 FROM node:20-alpine
 
@@ -13,7 +15,7 @@ WORKDIR /app
 
 # サーバー依存パッケージインストール
 COPY server/package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev --prefer-offline --no-audit --no-fund
 
 # サーバーコード
 COPY server/src/ ./src/
