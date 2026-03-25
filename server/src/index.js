@@ -17,7 +17,9 @@ const PORT = process.env.PORT || 3001;
 // ミドルウェア設定
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'https://grip-api-production.up.railway.app',
+  origin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+    : (process.env.NODE_ENV === 'production' ? false : 'http://localhost:3000'),
   credentials: true,
 }));
 app.use(morgan('dev'));
@@ -38,32 +40,15 @@ app.use('/api/line/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ヘルスチェック（DB接続確認付き）
+// ヘルスチェック（外部にシステム構成を露出しない）
 app.get('/api/health', async (req, res) => {
-  const health = {
-    status: 'ok',
-    service: 'GRIP API',
-    timestamp: new Date().toISOString(),
-    checks: {},
-  };
-
-  // Supabase接続チェック
   try {
     const { supabaseAdmin } = require('./config/supabase');
     const { error } = await supabaseAdmin.from('users').select('id').limit(1);
-    health.checks.supabase = error ? `error: ${error.message}` : 'connected';
-  } catch (e) {
-    health.checks.supabase = `error: ${e.message}`;
+    res.status(error ? 503 : 200).json({ status: error ? 'degraded' : 'ok' });
+  } catch {
+    res.status(503).json({ status: 'error' });
   }
-
-  // 環境変数チェック
-  health.checks.line = process.env.LINE_CHANNEL_ACCESS_TOKEN && !process.env.LINE_CHANNEL_ACCESS_TOKEN.startsWith('your-') ? 'configured' : 'not configured';
-  health.checks.anthropic = process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.startsWith('your-') ? 'configured' : 'not configured';
-  health.checks.square = process.env.SQUARE_ACCESS_TOKEN && !process.env.SQUARE_ACCESS_TOKEN.startsWith('your-') ? 'configured' : 'not configured';
-
-  const hasErrors = Object.values(health.checks).some(v => v.toString().startsWith('error'));
-  if (hasErrors) health.status = 'degraded';
-  res.status(200).json(health);
 });
 
 // ルート登録

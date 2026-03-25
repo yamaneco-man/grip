@@ -28,11 +28,11 @@ const MRR_DATA = [
 ];
 
 const EVENTS = [
-  { icon: '🎉', bg: 'var(--green-l)', text: '<b>加藤 副業スクール</b>が PROに新規契約', time: '2時間前' },
-  { icon: '🤝', bg: 'var(--purple-l)', text: '<b>中村代理店</b>が代理店契約を締結', time: '昨日' },
-  { icon: '⬆', bg: 'var(--amber-l)', text: '<b>山本 セールスコンサル</b>が PRO→VIP にアップグレード', time: '3日前' },
-  { icon: '❌', bg: 'var(--red-l)', text: '<b>鈴木 オンライン講座</b>が STANDARD を解約', time: '5日前' },
-  { icon: '🎉', bg: 'var(--green-l)', text: '<b>伊藤 美容サロン</b>が MONITOR で新規登録', time: '9日前' },
+  { icon: '🎉', bg: 'var(--green-l)', name: '加藤 副業スクール', action: 'が PROに新規契約', time: '2時間前' },
+  { icon: '🤝', bg: 'var(--purple-l)', name: '中村代理店', action: 'が代理店契約を締結', time: '昨日' },
+  { icon: '⬆', bg: 'var(--amber-l)', name: '山本 セールスコンサル', action: 'が PRO→VIP にアップグレード', time: '3日前' },
+  { icon: '❌', bg: 'var(--red-l)', name: '鈴木 オンライン講座', action: 'が STANDARD を解約', time: '5日前' },
+  { icon: '🎉', bg: 'var(--green-l)', name: '伊藤 美容サロン', action: 'が MONITOR で新規登録', time: '9日前' },
 ];
 
 export default function AdminDashboard() {
@@ -221,7 +221,9 @@ export default function AdminDashboard() {
           {EVENTS.map((e, i) => (
             <div key={i} className="flex gap-2.5 px-4 py-2.5 border-b cursor-pointer hover:bg-[#f6f7fb]" style={{ borderColor: 'var(--border)' }}>
               <div className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[13px] shrink-0 mt-0.5" style={{ background: e.bg }}>{e.icon}</div>
-              <div className="text-[12px] flex-1 leading-relaxed" style={{ color: 'var(--text2)' }} dangerouslySetInnerHTML={{ __html: e.text }} />
+              <div className="text-[12px] flex-1 leading-relaxed" style={{ color: 'var(--text2)' }}>
+                <span className="font-medium" style={{ color: 'var(--text)' }}>{e.name}</span>{e.action}
+              </div>
               <div className="text-[10px] font-mono whitespace-nowrap mt-0.5" style={{ color: 'var(--text3)' }}>{e.time}</div>
             </div>
           ))}

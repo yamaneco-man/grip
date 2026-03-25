@@ -18,10 +18,10 @@ const REV_DATA = [
 ];
 
 const NOTICES = [
-  { unread: true, icon: '🎉', bg: 'var(--green-l)', text: '<b>小林 情報商材</b>が STANDARD に新規契約しました。取り分 ¥4,900/月が発生します。', time: '2日前' },
-  { unread: true, icon: '📢', bg: 'var(--purple-l)', text: '<b>GRIP運営</b>より：4月より VIPプランの代理店還元率が 50% → 55% に変更されます。', time: '5日前' },
-  { unread: false, icon: '❌', bg: 'var(--red-l)', text: '<b>吉田 ダイエット講座</b>が STANDARD を解約しました。今月の取り分は ¥0 になります。', time: '12日前' },
-  { unread: false, icon: '⬆', bg: 'var(--amber-l)', text: '<b>田中 コーチング</b>が STANDARD → PRO にアップグレード。取り分が +¥10,000 増加しました。', time: '18日前' },
+  { unread: true, icon: '🎉', bg: 'var(--green-l)', name: '小林 情報商材', action: 'が STANDARD に新規契約しました。取り分 ¥4,900/月が発生します。', time: '2日前' },
+  { unread: true, icon: '📢', bg: 'var(--purple-l)', name: 'GRIP運営', action: 'より：4月より VIPプランの代理店還元率が 50% → 55% に変更されます。', time: '5日前' },
+  { unread: false, icon: '❌', bg: 'var(--red-l)', name: '吉田 ダイエット講座', action: 'が STANDARD を解約しました。今月の取り分は ¥0 になります。', time: '12日前' },
+  { unread: false, icon: '⬆', bg: 'var(--amber-l)', name: '田中 コーチング', action: 'が STANDARD → PRO にアップグレード。取り分が +¥10,000 増加しました。', time: '18日前' },
 ];
 
 export default function PartnerDashboard() {
@@ -219,7 +219,9 @@ export default function PartnerDashboard() {
             <div key={i} className="flex gap-2.5 px-4 py-2.5 border-b cursor-pointer hover:bg-[#f6f7fb]" style={{ borderColor: 'var(--border)' }}>
               {n.unread ? <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: 'var(--purple)' }} /> : <div className="w-1.5 shrink-0" />}
               <div className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[13px] shrink-0 mt-0.5" style={{ background: n.bg }}>{n.icon}</div>
-              <div className="text-[12px] flex-1 leading-relaxed" style={{ color: 'var(--text2)' }} dangerouslySetInnerHTML={{ __html: n.text }} />
+              <div className="text-[12px] flex-1 leading-relaxed" style={{ color: 'var(--text2)' }}>
+                <span className="font-medium" style={{ color: 'var(--text)' }}>{n.name}</span>{n.action}
+              </div>
               <div className="text-[10px] font-mono whitespace-nowrap mt-0.5" style={{ color: 'var(--text3)' }}>{n.time}</div>
             </div>
           ))}

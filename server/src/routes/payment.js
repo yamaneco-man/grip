@@ -71,23 +71,27 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   const signature = req.headers['x-square-hmacsha256-signature'];
   const webhookSecret = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
 
-  // 署名検証
-  if (process.env.NODE_ENV === 'production' && !webhookSecret) {
+  // 署名検証を必須化 — 署名キーまたは署名ヘッダーが欠けている場合は拒否
+  if (!webhookSecret) {
     console.error('Square Webhook署名キーが未設定です');
-    return res.status(503).json({ error: 'Webhook署名検証が設定されていません' });
+    return res.status(503).send();
   }
 
-  if (webhookSecret && signature) {
-    const notificationUrl = `${process.env.SQUARE_WEBHOOK_URL || ''}/api/payment/webhook`;
-    const body = typeof req.body === 'string' ? req.body : req.body.toString('utf8');
-    const hmac = crypto.createHmac('sha256', webhookSecret)
-      .update(notificationUrl + body)
-      .digest('base64');
+  if (!signature) {
+    console.error('Square署名ヘッダーがありません');
+    return res.status(401).send();
+  }
 
-    if (hmac !== signature) {
-      console.error('Square署名検証エラー');
-      return res.status(400).json({ error: '署名検証に失敗しました' });
-    }
+  const notificationUrl = `${process.env.SQUARE_WEBHOOK_URL || ''}/api/payment/webhook`;
+  const body = typeof req.body === 'string' ? req.body : req.body.toString('utf8');
+  const hmac = crypto.createHmac('sha256', webhookSecret)
+    .update(notificationUrl + body)
+    .digest('base64');
+
+  // タイミングセーフな比較で署名を検証
+  if (!crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(signature))) {
+    console.error('Square署名検証エラー');
+    return res.status(401).send();
   }
 
   try {

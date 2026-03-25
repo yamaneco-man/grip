@@ -40,7 +40,7 @@ router.post('/webhook', async (req, res) => {
     res.status(200).json({ status: 'ok' });
   } catch (err) {
     console.error('Webhook処理エラー:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Webhook処理に失敗しました' });
   }
 });
 
@@ -60,19 +60,22 @@ router.get('/followers', authenticate, async (req, res) => {
   }
 });
 
-// LINE友達詳細（メッセージ履歴付き）
+// LINE友達詳細（メッセージ履歴付き）— user_idで所有権チェック
 router.get('/followers/:id', authenticate, async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('line_followers')
       .select('*, messages(direction, content, emotion_score, created_at)')
       .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
       .single();
 
-    if (error) throw error;
+    if (error || !data) {
+      return res.status(404).json({ error: '友達が見つかりません' });
+    }
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'データの取得に失敗しました' });
   }
 });
 

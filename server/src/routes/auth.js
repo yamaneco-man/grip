@@ -1,7 +1,17 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const { supabase, supabaseAdmin } = require('../config/supabase');
 const { authenticate } = require('../middleware/auth');
+
+// ログイン専用レート制限（5回/15分 — ブルートフォース対策）
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'ログイン試行回数の上限に達しました。15分後にお試しください。' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // ユーザー登録
 router.post('/signup', async (req, res) => {
@@ -29,15 +39,15 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// ログイン
-router.post('/login', async (req, res) => {
+// ログイン（レート制限付き）
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     res.json({ user: data.user, session: data.session });
   } catch (err) {
-    res.status(401).json({ error: err.message });
+    res.status(401).json({ error: 'メールアドレスまたはパスワードが正しくありません' });
   }
 });
 
