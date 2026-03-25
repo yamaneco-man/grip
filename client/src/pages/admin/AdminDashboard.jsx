@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import KPICard from '../../components/KPICard';
+import { adminApi } from '../../utils/api';
 
 const PLAN_TAG = { free: 'bg-gray-100 text-gray-600 border-gray-300', monitor: 'bg-gray-100 text-gray-600 border-gray-300', standard: 'bg-blue-50 text-blue-700 border-blue-200', pro: 'bg-purple-50 text-purple-700 border-purple-200', vip: 'bg-amber-50 text-amber-700 border-amber-200' };
 const ROLE_TAG = { user: 'bg-gray-100 text-gray-600 border-gray-300', admin: 'bg-gray-900 text-white border-gray-900', partner: 'bg-purple-50 text-purple-700 border-purple-200' };
@@ -9,9 +10,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('grip_admin_token');
-    fetch('/api/admin/contracts', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
+    adminApi.getContracts()
       .then(data => { if (Array.isArray(data)) setContracts(data); })
       .catch(() => {})
       .finally(() => setLoading(false));

@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { adminApi } from '../../utils/api';
 
 export default function AdminAgencies() {
   const [agencies, setAgencies] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('grip_admin_token');
-    fetch('/api/admin/agencies', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(setAgencies)
+    adminApi.getAgencies()
+      .then(data => { if (Array.isArray(data)) setAgencies(data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

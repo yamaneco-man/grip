@@ -23,6 +23,62 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
+// 管理者用fetchラッパー
+async function adminFetch(path, options = {}) {
+  const token = localStorage.getItem('grip_admin_token');
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    localStorage.removeItem('grip_admin_token');
+    window.location.href = '/admin/login';
+    return;
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'APIエラー');
+  return data;
+}
+
+// パートナー用fetchラッパー
+async function partnerFetch(path, options = {}) {
+  const token = localStorage.getItem('grip_partner_token');
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    localStorage.removeItem('grip_partner_token');
+    window.location.href = '/partner/login';
+    return;
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'APIエラー');
+  return data;
+}
+
+export const adminApi = {
+  getContracts: () => adminFetch('/admin/contracts'),
+  getAgencies: () => adminFetch('/admin/agencies'),
+  updateRole: (userId, role) => adminFetch(`/admin/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+};
+
+export const partnerApi = {
+  // TODO: パートナー用API追加時に実装
+};
+
 export const api = {
   // 認証
   login: (email, password) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),

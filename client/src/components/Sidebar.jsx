@@ -66,18 +66,21 @@ export default function Sidebar({ brand, badge, badgeClass, navSections, user, o
 
       {/* User */}
       <div className="border-t px-3.5 py-3" style={{ borderColor: 'var(--border)' }}>
-        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer hover:bg-black/[0.04]">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[13px] text-white"
+        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[13px] text-white shrink-0"
             style={{ background: user?.avatarBg || 'var(--text)' }}>
             {user?.initial || 'U'}
           </div>
-          <div>
-            <div className="text-[13px] font-medium" style={{ color: 'var(--text)' }}>{user?.name || 'User'}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-medium truncate" style={{ color: 'var(--text)' }}>{user?.name || 'User'}</div>
             <div className="text-[11px]" style={{ color: 'var(--text3)' }}>{user?.sub || ''}</div>
           </div>
-          <button onClick={onLogout} className="ml-auto text-[18px]" style={{ color: 'var(--text3)' }}
-            title="ログアウト">⋯</button>
         </div>
+        <button onClick={onLogout}
+          className="w-full mt-1.5 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all hover:bg-red-50"
+          style={{ color: 'var(--red)', border: '1px solid var(--border)' }}>
+          ログアウト
+        </button>
       </div>
     </aside>
   );

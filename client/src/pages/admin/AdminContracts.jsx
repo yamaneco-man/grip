@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { adminApi } from '../../utils/api';
 
-const PLAN_TAG = { free: 'bg-[#f1f5f9] text-[#64748b] border-[#cbd5e1]', monitor: 'bg-[#f1f5f9] text-[#64748b] border-[#cbd5e1]', standard: 'bg-[var(--blue-l)] text-[var(--blue)] border-[#b3d1f5]', pro: 'bg-[var(--purple-l)] text-[var(--purple)] border-[var(--purple-m)]', vip: 'bg-[var(--amber-l)] text-[var(--amber)] border-[#fde29a]' };
-const ROLE_TAG = { user: 'bg-[var(--bg)] text-[var(--text2)] border-[var(--border2)]', admin: 'bg-[var(--text)] text-white border-[var(--text)]', partner: 'bg-[var(--purple-l)] text-[var(--purple)] border-[var(--purple-m)]' };
+const PLAN_TAG = { free: 'bg-gray-100 text-gray-600 border-gray-300', monitor: 'bg-gray-100 text-gray-600 border-gray-300', standard: 'bg-blue-50 text-blue-700 border-blue-200', pro: 'bg-purple-50 text-purple-700 border-purple-200', vip: 'bg-amber-50 text-amber-700 border-amber-200' };
+const ROLE_TAG = { user: 'bg-gray-100 text-gray-600 border-gray-300', admin: 'bg-gray-900 text-white border-gray-900', partner: 'bg-purple-50 text-purple-700 border-purple-200' };
 
 export default function AdminContracts() {
   const [users, setUsers] = useState([]);
@@ -9,10 +10,8 @@ export default function AdminContracts() {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    const token = localStorage.getItem('grip_admin_token');
-    fetch('/api/admin/contracts', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(setUsers)
+    adminApi.getContracts()
+      .then(data => { if (Array.isArray(data)) setUsers(data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
