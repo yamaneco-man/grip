@@ -1,0 +1,15 @@
+import React from 'react';
+
+export default function AdminSystem() {
+  return (
+    <div>
+      <h2 className="text-[20px] font-bold mb-1" style={{ color: 'var(--text)' }}>システム設定</h2>
+      <p className="text-[13px] mb-6" style={{ color: 'var(--text3)' }}>環境設定・API接続・n8n連携の管理</p>
+      <div className="rounded-xl p-8 text-center" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
+        <div className="text-4xl mb-3">⚙</div>
+        <p className="text-[14px] font-medium" style={{ color: 'var(--text2)' }}>システム設定ページ</p>
+        <p className="text-[12px] mt-1" style={{ color: 'var(--text3)' }}>Square・LINE・Supabase・n8n接続状態の確認・設定を実装予定</p>
+      </div>
+    </div>
+  );
+}
