@@ -13,7 +13,6 @@ export default function AdminLogin() {
     setError('');
     setLoading(true);
     try {
-      // TODO: 管理者認証APIに差し替え
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -33,38 +32,72 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-      <div className="rounded-2xl shadow-xl p-8 w-full max-w-md" style={{ background: 'var(--white)' }}>
-        <div className="flex items-center justify-center gap-2.5 mb-2">
-          <div className="w-[30px] h-[30px] rounded-lg flex items-center justify-center font-bold text-[13px] text-white" style={{ background: 'var(--text)' }}>G</div>
-          <span className="text-2xl font-bold" style={{ color: 'var(--text)' }}>GRIP</span>
-          <span className="text-[9px] font-mono font-medium px-2 py-0.5 rounded-xl text-white" style={{ background: 'var(--text)' }}>ADMIN</span>
+    <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
+      {/* 左パネル */}
+      <div className="hidden lg:flex w-[480px] flex-col justify-between p-10"
+        style={{ background: 'var(--text)', color: '#fff' }}>
+        <div>
+          <div className="flex items-center gap-3 mb-16">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-[18px]"
+              style={{ background: 'rgba(255,255,255,0.15)' }}>G</div>
+            <span className="text-[22px] font-bold tracking-tight">GRIP</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-lg"
+              style={{ background: 'rgba(255,255,255,0.15)' }}>ADMIN</span>
+          </div>
+          <h2 className="text-[32px] font-bold leading-tight mb-4" style={{ letterSpacing: '-0.5px' }}>
+            管理者コンソール
+          </h2>
+          <p className="text-[15px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            契約者管理・代理店管理・収益レポート・システム設定
+          </p>
         </div>
-        <p className="text-center text-[14px] mb-8" style={{ color: 'var(--text3)' }}>管理者ログイン</p>
+        <div className="text-[11px] font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          &copy; 2026 GRIP Admin Console
+        </div>
+      </div>
 
-        {error && (
-          <div className="rounded-lg p-3 mb-4 text-[13px]" style={{ background: 'var(--red-l)', color: 'var(--red)' }}>{error}</div>
-        )}
+      {/* 右パネル */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-[380px]">
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-8">
+            <div className="w-[30px] h-[30px] rounded-lg flex items-center justify-center font-bold text-[13px] text-white"
+              style={{ background: 'var(--text)' }}>G</div>
+            <span className="text-[20px] font-bold" style={{ color: 'var(--text)' }}>GRIP</span>
+            <span className="text-[9px] font-mono font-medium px-2 py-0.5 rounded-xl text-white"
+              style={{ background: 'var(--text)' }}>ADMIN</span>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-[13px] font-medium mb-1" style={{ color: 'var(--text2)' }}>メールアドレス</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-              className="w-full px-4 py-2.5 rounded-lg text-[14px] outline-none transition-all focus:ring-2"
-              style={{ border: '1px solid var(--border2)', background: 'var(--white)' }} />
-          </div>
-          <div>
-            <label className="block text-[13px] font-medium mb-1" style={{ color: 'var(--text2)' }}>パスワード</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
-              className="w-full px-4 py-2.5 rounded-lg text-[14px] outline-none transition-all focus:ring-2"
-              style={{ border: '1px solid var(--border2)', background: 'var(--white)' }} />
-          </div>
-          <button type="submit" disabled={loading}
-            className="w-full py-3 rounded-lg text-[14px] font-medium text-white transition-all hover:-translate-y-px disabled:opacity-50"
-            style={{ background: 'var(--text)' }}>
-            {loading ? '処理中...' : '管理者ログイン'}
-          </button>
-        </form>
+          <h1 className="text-[24px] font-bold mb-1" style={{ color: 'var(--text)', letterSpacing: '-0.3px' }}>
+            管理者ログイン
+          </h1>
+          <p className="text-[14px] mb-8" style={{ color: 'var(--text3)' }}>管理者権限のアカウントでログイン</p>
+
+          {error && (
+            <div className="rounded-lg px-4 py-3 mb-5 text-[13px]"
+              style={{ background: 'var(--red-l)', color: 'var(--red)' }}>{error}</div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[13px] font-medium mb-1.5" style={{ color: 'var(--text2)' }}>メールアドレス</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
+                placeholder="admin@example.com"
+                className="w-full px-4 py-3 rounded-lg text-[14px] outline-none transition-all"
+                style={{ background: 'var(--white)', border: '1px solid var(--border2)', color: 'var(--text)' }} />
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium mb-1.5" style={{ color: 'var(--text2)' }}>パスワード</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
+                className="w-full px-4 py-3 rounded-lg text-[14px] outline-none transition-all"
+                style={{ background: 'var(--white)', border: '1px solid var(--border2)', color: 'var(--text)' }} />
+            </div>
+            <button type="submit" disabled={loading}
+              className="w-full py-3 rounded-lg text-[14px] font-semibold text-white transition-all hover:-translate-y-px hover:shadow-lg disabled:opacity-50"
+              style={{ background: 'var(--text)' }}>
+              {loading ? '処理中...' : '管理者ログイン'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
