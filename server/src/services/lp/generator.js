@@ -97,7 +97,21 @@ async function getLP(lpId) {
 }
 
 /**
- * LP HTML配信（公開ページ用）
+ * HTMLサニタイズ — scriptタグ・イベントハンドラを除去
+ */
+function sanitizeHTML(html) {
+  if (!html) return html;
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^>]*>/gi, '')
+    .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/\bon\w+\s*=\s*[^\s>]*/gi, '')
+    .replace(/javascript\s*:/gi, '')
+    .replace(/data\s*:\s*text\/html/gi, '');
+}
+
+/**
+ * LP HTML配信（公開ページ用）— XSSサニタイズ付き
  */
 async function serveLPHtml(lpId) {
   const { data, error } = await supabaseAdmin
@@ -110,14 +124,13 @@ async function serveLPHtml(lpId) {
 
   // PV数をアトミックにインクリメント
   await supabaseAdmin.rpc('increment_pv', { lp_id: lpId }).catch(async () => {
-    // RPC未定義時のフォールバック（SQL直接実行）
     await supabaseAdmin
       .from('lps')
       .update({ pv_count: (data.pv_count || 0) + 1 })
       .eq('id', lpId);
   });
 
-  return data.html_content;
+  return sanitizeHTML(data.html_content);
 }
 
 /**

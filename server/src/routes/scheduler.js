@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const { supabaseAdmin } = require('../config/supabase');
 const { lineClient } = require('../config/line');
@@ -27,16 +28,23 @@ function shouldRunChurn(plan) {
   return true; // pro, vip は毎日
 }
 
-// n8n用APIキー認証
+// n8n用APIキー認証（タイミングセーフ比較）
 function requireSchedulerKey(req, res, next) {
-  const key = req.headers['x-scheduler-key'] || req.query.key;
+  const key = req.headers['x-scheduler-key'];
   const expected = process.env.SCHEDULER_API_KEY;
 
   if (!expected) {
-    return res.status(503).json({ error: 'SCHEDULER_API_KEY が未設定です' });
+    return res.status(503).send();
   }
-  if (key !== expected) {
-    return res.status(401).json({ error: '無効なスケジューラーキーです' });
+  if (!key) {
+    return res.status(401).send();
+  }
+  try {
+    if (!crypto.timingSafeEqual(Buffer.from(key), Buffer.from(expected))) {
+      return res.status(401).send();
+    }
+  } catch {
+    return res.status(401).send();
   }
   next();
 }

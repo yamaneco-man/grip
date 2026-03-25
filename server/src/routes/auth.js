@@ -13,8 +13,13 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// ユーザー登録
-router.post('/signup', async (req, res) => {
+// ユーザー登録（レート制限付き — 大量アカウント作成防止）
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { error: 'アカウント作成の上限に達しました。1時間後にお試しください。' },
+});
+router.post('/signup', signupLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -24,12 +29,13 @@ router.post('/signup', async (req, res) => {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
 
-    // usersテーブルにもレコード作成
+    // usersテーブルにもレコード作成（roleは常にuser — 昇格はadmin APIのみ）
     if (data.user) {
       await supabaseAdmin.from('users').insert({
         id: data.user.id,
         email: data.user.email,
         plan: 'free',
+        role: 'user',
       });
     }
 

@@ -17,7 +17,11 @@ function verifyLineSignature(req) {
     .update(body)
     .digest('base64');
 
-  return hash === signature;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
+  } catch {
+    return false;
+  }
 }
 
 // LINE Webhook受信（署名検証付き）

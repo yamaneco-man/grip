@@ -18,7 +18,7 @@ async function checkLPLimit(req, res, next) {
     const plan = PLANS[user.plan || 'free'];
     if (!plan.lpLimit) return next(); // 無制限
 
-    // LP総数をカウント（アカウントあたりの上限）
+    // LP現存数をチェック（アカウントあたりの上限）
     const { count, error: countErr } = await supabaseAdmin
       .from('lps')
       .select('id', { count: 'exact', head: true })
@@ -30,6 +30,21 @@ async function checkLPLimit(req, res, next) {
       return res.status(403).json({
         error: `${plan.name}プランのLP上限（${plan.lpLimit}件）に達しました。不要なLPを削除するか、アップグレードしてください。`,
       });
+    }
+
+    // FREEプラン: 月間生成回数も制限（削除→再作成の迂回防止）
+    if (user.plan === 'free' || !user.plan) {
+      const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      const { count: monthCount, error: mErr } = await supabaseAdmin
+        .from('lps')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', monthStart);
+      if (!mErr && monthCount >= plan.lpLimit * 2) {
+        return res.status(403).json({
+          error: `${plan.name}プランの月間LP生成上限に達しました。アップグレードしてください。`,
+        });
+      }
     }
 
     next();

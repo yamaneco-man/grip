@@ -26,11 +26,20 @@ app.use(morgan('dev'));
 
 // レート制限（API保護）
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15分
+  windowMs: 15 * 60 * 1000,
   max: 100,
   message: { error: 'リクエスト数の上限に達しました。しばらくしてからお試しください。' },
 });
 app.use('/api/', apiLimiter);
+
+// AI系API専用レート制限（Claude API課金爆発防止）
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1時間
+  max: 20,
+  message: { error: 'AI機能の利用上限に達しました。1時間後にお試しください。' },
+});
+app.use('/api/ai/', aiLimiter);
+app.use('/api/lp/generate', aiLimiter);
 
 // LINE Webhookはraw bodyが必要（署名検証のため）
 // express.json()より前にルート登録
@@ -60,6 +69,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/payment', require('./routes/payment'));
 app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/step-config', require('./routes/step-config'));
+app.use('/api/admin', require('./routes/admin'));
 
 // 本番環境: Reactビルド成果物を配信
 if (process.env.NODE_ENV === 'production') {
