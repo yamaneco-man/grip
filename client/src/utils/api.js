@@ -13,8 +13,12 @@ async function apiFetch(path, options = {}) {
   });
 
   if (res.status === 401) {
-    localStorage.removeItem('grip_token');
-    window.location.href = '/login';
+    // admin/partnerページにいる場合はユーザー用ログインに飛ばさない
+    const path = window.location.pathname;
+    if (!path.startsWith('/admin') && !path.startsWith('/partner')) {
+      localStorage.removeItem('grip_token');
+      window.location.href = '/login';
+    }
     return;
   }
 
@@ -35,7 +39,7 @@ async function adminFetch(path, options = {}) {
     },
   });
 
-  if (res.status === 401 || res.status === 403) {
+  if (res.status === 401) {
     localStorage.removeItem('grip_admin_token');
     window.location.href = '/admin/login';
     return;
@@ -58,7 +62,7 @@ async function partnerFetch(path, options = {}) {
     },
   });
 
-  if (res.status === 401 || res.status === 403) {
+  if (res.status === 401) {
     localStorage.removeItem('grip_partner_token');
     window.location.href = '/partner/login';
     return;
