@@ -14,6 +14,152 @@ const FEATURES = {
   vip: ['全機能無制限', 'カスタムステップ', 'リアルタイム離脱検知', '専用コンサル', '優先サポート'],
 };
 
+const CHANNELS = [
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'x', label: 'X (Twitter)' },
+  { value: 'note', label: 'note' },
+  { value: 'seo', label: 'SEO / ブログ' },
+  { value: 'referral', label: '紹介' },
+  { value: 'ad', label: '広告' },
+  { value: 'qr', label: 'QRコード' },
+  { value: 'richmenu', label: 'リッチメニュー' },
+  { value: 'other', label: 'その他' },
+];
+
+function TrackingLinksSection() {
+  const [links, setLinks] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState('');
+  const [channel, setChannel] = useState('tiktok');
+  const [lineUrl, setLineUrl] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+
+  useEffect(() => {
+    api.getTrackingLinks().then(setLinks).catch(() => {});
+  }, []);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!name || !lineUrl) return;
+    setCreating(true);
+    try {
+      const result = await api.createTrackingLink(name, channel, lineUrl);
+      setLinks([result, ...links]);
+      setName(''); setLineUrl(''); setShowForm(false);
+    } catch (err) {
+      alert(err.message || '作成に失敗しました');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('このリンクを削除しますか？')) return;
+    await api.deleteTrackingLink(id);
+    setLinks(links.filter(l => l.id !== id));
+  };
+
+  const handleCopy = (url, id) => {
+    navigator.clipboard.writeText(url);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  return (
+    <div className="rounded-xl p-5 mb-5" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-[18px]">📊</span>
+          <h3 className="text-[14px] font-semibold" style={{ color: 'var(--text)' }}>流入経路トラッキングリンク</h3>
+        </div>
+        <button onClick={() => setShowForm(!showForm)}
+          className="text-[12px] font-medium px-3 py-1.5 rounded-lg text-white transition-all hover:-translate-y-px"
+          style={{ background: 'var(--text)' }}>
+          ＋ リンク作成
+        </button>
+      </div>
+
+      <p className="text-[11.5px] mb-4" style={{ color: 'var(--text3)' }}>
+        経路ごとにトラッキングリンクを作成すると、どのチャネルからLINE友達が来たか自動で判別できます。
+      </p>
+
+      {showForm && (
+        <form onSubmit={handleCreate} className="rounded-lg p-4 mb-4 space-y-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[11px] font-medium mb-1" style={{ color: 'var(--text2)' }}>リンク名</label>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} required
+                placeholder="例: TikTokプロフリンク"
+                className="w-full px-3 py-2 rounded-lg text-[12px]"
+                style={{ border: '1px solid var(--border2)', color: 'var(--text)' }} />
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium mb-1" style={{ color: 'var(--text2)' }}>チャネル</label>
+              <select value={channel} onChange={e => setChannel(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg text-[12px]"
+                style={{ border: '1px solid var(--border2)', color: 'var(--text)' }}>
+                {CHANNELS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium mb-1" style={{ color: 'var(--text2)' }}>LINE友達追加URL</label>
+              <input type="url" value={lineUrl} onChange={e => setLineUrl(e.target.value)} required
+                placeholder="https://lin.ee/xxxxx"
+                className="w-full px-3 py-2 rounded-lg text-[12px]"
+                style={{ border: '1px solid var(--border2)', color: 'var(--text)' }} />
+            </div>
+          </div>
+          <button type="submit" disabled={creating}
+            className="px-4 py-2 rounded-lg text-[12px] font-medium text-white disabled:opacity-50"
+            style={{ background: 'var(--green)' }}>
+            {creating ? '作成中...' : 'トラッキングリンクを作成'}
+          </button>
+        </form>
+      )}
+
+      {links.length > 0 ? (
+        <div className="space-y-2">
+          {links.map(link => {
+            const trackingUrl = `https://grip-api-production.up.railway.app/t/${link.tracking_code}`;
+            const ch = CHANNELS.find(c => c.value === link.channel) || { label: link.channel };
+            return (
+              <div key={link.id} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[13px] font-medium" style={{ color: 'var(--text)' }}>{link.name}</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                      style={{ background: 'var(--blue-l)', color: 'var(--blue)', border: '1px solid var(--border)' }}>
+                      {ch.label}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-mono truncate" style={{ color: 'var(--text3)' }}>{trackingUrl}</div>
+                  <div className="flex items-center gap-3 mt-1 text-[10.5px] font-mono" style={{ color: 'var(--text3)' }}>
+                    <span>クリック: {link.click_count || 0}</span>
+                    <span>登録: {link.follow_count || 0}</span>
+                  </div>
+                </div>
+                <button onClick={() => handleCopy(trackingUrl, link.id)}
+                  className="px-3 py-1.5 rounded text-[11px] font-medium shrink-0 transition-colors"
+                  style={{ background: copiedId === link.id ? 'var(--green)' : 'var(--text)', color: '#fff' }}>
+                  {copiedId === link.id ? '✓' : 'コピー'}
+                </button>
+                <button onClick={() => handleDelete(link.id)}
+                  className="text-[14px] shrink-0 px-1" style={{ color: 'var(--red)' }} title="削除">×</button>
+              </div>
+            );
+          })}
+        </div>
+      ) : !showForm && (
+        <div className="text-center py-4 text-[12px]" style={{ color: 'var(--text3)' }}>
+          まだリンクがありません。「＋ リンク作成」から経路ごとのリンクを発行してください。
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Settings() {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [plans, setPlans] = useState(null);
@@ -199,6 +345,11 @@ export default function Settings() {
             </form>
           )}
         </div>
+      )}
+
+      {/* トラッキングリンク管理 */}
+      {currentPlan?.plan && currentPlan.plan !== 'free' && (
+        <TrackingLinksSection />
       )}
 
       {/* FREEプランの場合 */}

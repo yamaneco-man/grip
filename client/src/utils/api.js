@@ -118,6 +118,13 @@ export const api = {
   updateStepConfig: (day, data) => apiFetch(`/step-config/${day}`, { method: 'PUT', body: JSON.stringify(data) }),
   resetStepConfig: () => apiFetch('/step-config/reset', { method: 'POST' }),
 
+  // トラッキングリンク
+  getTrackingLinks: () => apiFetch('/tracking-links'),
+  createTrackingLink: (name, channel, lineUrl) =>
+    apiFetch('/tracking-links', { method: 'POST', body: JSON.stringify({ name, channel, lineUrl }) }),
+  deleteTrackingLink: (id) => apiFetch(`/tracking-links/${id}`, { method: 'DELETE' }),
+  getTrafficAnalytics: () => apiFetch('/line-settings/analytics'),
+
   // LINE連携
   getLineSettings: () => apiFetch('/line-settings/settings'),
   saveLineSettings: (channelAccessToken, channelSecret) =>

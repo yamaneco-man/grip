@@ -73,6 +73,49 @@ app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/step-config', require('./routes/step-config'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/line-settings', require('./routes/lineSettings'));
+app.use('/api/tracking-links', require('./routes/trackingLinks'));
+
+// トラッキングリンクのリダイレクト（短縮URL）
+app.get('/t/:code', async (req, res) => {
+  try {
+    const { supabaseAdmin } = require('./config/supabase');
+    const { data: link } = await supabaseAdmin
+      .from('tracking_links')
+      .select('id, original_line_url, channel, user_id')
+      .eq('tracking_code', req.params.code)
+      .single();
+
+    if (!link || !link.original_line_url) {
+      return res.status(404).send('リンクが見つかりません');
+    }
+
+    // クリック数をインクリメント
+    await supabaseAdmin
+      .from('tracking_links')
+      .update({ click_count: supabaseAdmin.rpc ? undefined : 0 })
+      .eq('id', link.id);
+    // RPCがない場合のフォールバック
+    await supabaseAdmin.rpc('increment_tracking_click', { link_id: link.id }).catch(async () => {
+      const { data: current } = await supabaseAdmin.from('tracking_links').select('click_count').eq('id', link.id).single();
+      await supabaseAdmin.from('tracking_links').update({ click_count: (current?.click_count || 0) + 1 }).eq('id', link.id);
+    });
+
+    // 最新の流入経路をセッション的に記録（Webhook受信時に参照）
+    await supabaseAdmin.from('lp_access_logs').insert({
+      lp_id: null,
+      source_channel: link.channel,
+      utm_source: link.channel,
+      utm_medium: 'tracking_link',
+      utm_campaign: link.id,
+      referrer: req.headers.referer || null,
+    }).catch(() => {});
+
+    // LINE友達追加URLにリダイレクト
+    res.redirect(302, link.original_line_url);
+  } catch {
+    res.status(500).send('エラーが発生しました');
+  }
+});
 
 // 本番環境: Reactビルド成果物を配信
 if (process.env.NODE_ENV === 'production') {
