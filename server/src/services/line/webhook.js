@@ -52,12 +52,27 @@ async function handleFollow(event, userId) {
     console.error('プロフィール取得エラー:', e.message);
   }
 
-  // LP追跡: フォローイベントのパラメータからソースLPを特定
-  // LINE友達追加URL: https://lin.ee/xxx?lp={lp_id} or リッチメニューのpostback
+  // LP追跡・流入経路: フォローイベントのパラメータから特定
   let sourceLpId = null;
+  let sourceChannel = null;
+
   if (event.follow?.isUnblocked === false) {
-    // 初回フォロー時のみLP追跡（再フォローは除く）
+    // 初回フォロー時のみ追跡（再フォローは除く）
+    // LINE友達追加URLの?lp=xxx&src=xxxから取得を試みる
+    // MVPフォールバック: 直近のLPを自動紐づけ
     sourceLpId = await resolveSourceLP(userId);
+
+    // 直近のLPアクセスログから流入経路を取得
+    if (sourceLpId) {
+      const { data: accessLog } = await supabaseAdmin
+        .from('lp_access_logs')
+        .select('source_channel, utm_source')
+        .eq('lp_id', sourceLpId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      sourceChannel = accessLog?.source_channel || accessLog?.utm_source || null;
+    }
   }
 
   // Supabaseに友達情報を保存
@@ -68,6 +83,7 @@ async function handleFollow(event, userId) {
       follower_line_id: followerLineId,
       display_name: displayName,
       source_lp_id: sourceLpId,
+      source_channel: sourceChannel,
       registered_at: new Date().toISOString(),
       is_blocked: false,
       blocked_at: null,

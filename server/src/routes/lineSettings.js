@@ -87,4 +87,49 @@ router.delete('/settings', authenticate, async (req, res) => {
   }
 });
 
+// 流入経路分析（有料プラン限定）
+router.get('/analytics', authenticate, requirePaidPlan, async (req, res) => {
+  try {
+    // チャネル別の友達数を集計
+    const { data: followers, error } = await supabaseAdmin
+      .from('line_followers')
+      .select('source_channel')
+      .eq('user_id', req.user.id)
+      .eq('is_blocked', false);
+
+    if (error) throw error;
+
+    const channels = {};
+    (followers || []).forEach(f => {
+      const ch = f.source_channel || 'direct';
+      channels[ch] = (channels[ch] || 0) + 1;
+    });
+
+    // LPアクセスログ集計
+    const { data: lps } = await supabaseAdmin
+      .from('lps')
+      .select('id')
+      .eq('user_id', req.user.id);
+
+    const lpIds = (lps || []).map(l => l.id);
+    let accessByChannel = {};
+
+    if (lpIds.length > 0) {
+      const { data: logs } = await supabaseAdmin
+        .from('lp_access_logs')
+        .select('source_channel')
+        .in('lp_id', lpIds);
+
+      (logs || []).forEach(l => {
+        const ch = l.source_channel || 'direct';
+        accessByChannel[ch] = (accessByChannel[ch] || 0) + 1;
+      });
+    }
+
+    res.json({ followersByChannel: channels, lpAccessByChannel: accessByChannel });
+  } catch {
+    res.status(500).json({ error: '分析データの取得に失敗しました' });
+  }
+});
+
 module.exports = router;

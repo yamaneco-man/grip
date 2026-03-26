@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
 const { checkLPLimit } = require('../middleware/planLimit');
+const { supabaseAdmin } = require('../config/supabase');
 const { createLP, getLPs, getLP, serveLPHtml, updateLP, deleteLP } = require('../services/lp/generator');
 
 // LP一覧取得（認証必須）
@@ -28,13 +29,47 @@ router.post('/generate', authenticate, checkLPLimit, async (req, res) => {
   }
 });
 
-// LP HTML公開ページ（認証不要）
+// LP HTML公開ページ（認証不要 + 流入経路トラッキング）
 router.get('/view/:id', async (req, res) => {
   try {
     const html = await serveLPHtml(req.params.id);
     if (!html) return res.status(404).send('LPが見つかりません');
+
+    // UTMパラメータをアクセスログに記録
+    const { utm_source, utm_medium, utm_campaign, utm_content, ref: sourceChannel } = req.query;
+    if (utm_source || sourceChannel) {
+      supabaseAdmin.from('lp_access_logs').insert({
+        lp_id: req.params.id,
+        source_channel: sourceChannel || utm_source || null,
+        utm_source: utm_source || null,
+        utm_medium: utm_medium || null,
+        utm_campaign: utm_campaign || null,
+        utm_content: utm_content || null,
+        referrer: req.headers.referer || null,
+      }).catch(() => {});
+    }
+
+    // LPのHTMLにトラッキングスクリプトを注入
+    const trackingScript = `
+<script>
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var source = params.get('ref') || params.get('utm_source') || 'direct';
+  var lpId = '${req.params.id}';
+  // LINE友達追加URLにソース情報を付与
+  document.querySelectorAll('a[href*="lin.ee"], a[href*="line.me"]').forEach(function(a){
+    var url = new URL(a.href);
+    url.searchParams.set('lp', lpId);
+    url.searchParams.set('src', source);
+    if(params.get('utm_campaign')) url.searchParams.set('campaign', params.get('utm_campaign'));
+    a.href = url.toString();
+  });
+})();
+</script>`;
+
+    const enhancedHtml = html.replace('</body>', trackingScript + '</body>');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
+    res.send(enhancedHtml);
   } catch (err) {
     res.status(404).send('LPが見つかりません');
   }
