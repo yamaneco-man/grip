@@ -2,19 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 
 const PLAN_COLORS = {
-  free: 'border-gray-300',
-  monitor: 'border-green-500',
-  standard: 'border-blue-500',
-  pro: 'border-purple-500',
-  vip: 'border-yellow-500',
+  free: 'var(--text3)', monitor: 'var(--green)', standard: 'var(--blue)',
+  pro: 'var(--purple)', vip: 'var(--amber)',
 };
 
-const PLAN_BADGES = {
-  free: 'bg-gray-100 text-gray-700',
-  monitor: 'bg-green-100 text-green-700',
-  standard: 'bg-blue-100 text-blue-700',
-  pro: 'bg-purple-100 text-purple-700',
-  vip: 'bg-yellow-100 text-yellow-700',
+const FEATURES = {
+  free: ['LP生成 3件', 'LINE追跡 50人', 'ダッシュボード'],
+  monitor: ['LP無制限', 'LINE追跡 500人', '固定テンプレステップ', '週次離脱検知', '先着30名限定'],
+  standard: ['LP無制限', 'LINE追跡 500人', '固定テンプレステップ', '週次離脱検知'],
+  pro: ['LP無制限', 'LINE追跡 無制限', 'AI自動ステップ', '日次離脱検知', '反論処理AI'],
+  vip: ['全機能無制限', 'カスタムステップ', 'リアルタイム離脱検知', '専用コンサル', '優先サポート'],
 };
 
 export default function Settings() {
@@ -23,6 +20,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadData();
@@ -31,15 +29,15 @@ export default function Settings() {
   async function loadData() {
     try {
       const [planData, plansData, profileData] = await Promise.all([
-        api.getCurrentPlan(),
-        api.getPlans(),
-        api.getProfile(),
+        api.getCurrentPlan().catch(() => ({ plan: 'free' })),
+        api.getPlans().catch(() => null),
+        api.getProfile().catch(() => null),
       ]);
       setCurrentPlan(planData);
       setPlans(plansData);
       setProfile(profileData);
     } catch (err) {
-      console.error(err);
+      setError('データの読み込みに失敗しました');
     } finally {
       setLoading(false);
     }
@@ -48,94 +46,93 @@ export default function Settings() {
   async function handleUpgrade(planKey) {
     setUpgrading(planKey);
     try {
-      const { url } = await api.checkout(planKey);
-      if (url) window.location.href = url;
+      const result = await api.checkout(planKey);
+      if (result?.url) window.location.href = result.url;
     } catch (err) {
-      alert(err.message);
+      alert(err.message || '決済リンクの作成に失敗しました');
     } finally {
       setUpgrading(null);
     }
   }
 
-  if (loading) return <p className="text-gray-500">読み込み中...</p>;
+  if (loading) return <div className="text-center py-20" style={{ color: 'var(--text3)' }}>読み込み中...</div>;
 
   const planOrder = ['free', 'monitor', 'standard', 'pro', 'vip'];
   const currentIndex = planOrder.indexOf(currentPlan?.plan || 'free');
 
-  const features = {
-    free: ['LP生成 3件/月', 'LINE追跡 50人', 'ダッシュボード'],
-    monitor: ['LP生成 無制限', 'LINE追跡 500人', '固定テンプレステップ配信', '週次離脱検知', '自動返信', '先着30名限定モニター価格'],
-    standard: ['LP生成 無制限', 'LINE追跡 500人', '固定テンプレステップ配信', '週次離脱検知', '自動返信'],
-    pro: ['LP生成 無制限', 'LINE追跡 無制限', 'ステップ自動生成', '日次離脱検知', '反論処理', '自動返信'],
-    vip: ['全機能無制限', 'カスタムステップ設計', 'リアルタイム離脱検知', '優先サポート', '専用コンサルティング'],
-  };
-
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">設定</h2>
-      <p className="text-gray-500 mb-8">アカウント情報・プラン管理</p>
+      <h2 className="text-[20px] font-bold mb-1" style={{ color: 'var(--text)' }}>設定</h2>
+      <p className="text-[13px] mb-5" style={{ color: 'var(--text3)' }}>アカウント情報・プラン管理</p>
+
+      {error && (
+        <div className="rounded-lg px-4 py-3 mb-5 text-[13px]" style={{ background: 'var(--red-l)', color: 'var(--red)' }}>{error}</div>
+      )}
 
       {/* アカウント情報 */}
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">アカウント情報</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="rounded-xl p-5 mb-5" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
+        <h3 className="text-[14px] font-semibold mb-3" style={{ color: 'var(--text)' }}>アカウント情報</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p className="text-gray-500">メールアドレス</p>
-            <p className="font-medium text-gray-800">{profile?.email}</p>
+            <div className="text-[12px] mb-0.5" style={{ color: 'var(--text3)' }}>メールアドレス</div>
+            <div className="text-[14px] font-medium" style={{ color: 'var(--text)' }}>{profile?.email || '—'}</div>
           </div>
           <div>
-            <p className="text-gray-500">現在のプラン</p>
-            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${PLAN_BADGES[currentPlan?.plan || 'free']}`}>
-              {currentPlan?.details?.name || 'FREE'}
+            <div className="text-[12px] mb-0.5" style={{ color: 'var(--text3)' }}>現在のプラン</div>
+            <span className="inline-flex px-3 py-1 rounded-full text-[12px] font-semibold font-mono"
+              style={{ background: 'var(--surface)', color: PLAN_COLORS[currentPlan?.plan || 'free'], border: '1px solid var(--border)' }}>
+              {(currentPlan?.plan || 'FREE').toUpperCase()}
             </span>
           </div>
         </div>
       </div>
 
       {/* プラン選択 */}
-      <h3 className="text-lg font-bold text-gray-800 mb-4">プラン</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <h3 className="text-[14px] font-semibold mb-3" style={{ color: 'var(--text)' }}>プラン</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
         {plans && planOrder.map((key, index) => {
           const plan = plans[key];
+          if (!plan) return null;
           const isCurrent = key === (currentPlan?.plan || 'free');
           const isDowngrade = index < currentIndex;
+          const color = PLAN_COLORS[key];
 
           return (
-            <div
-              key={key}
-              className={`rounded-xl border-2 p-6 ${isCurrent ? PLAN_COLORS[key] + ' bg-gray-50' : 'border-gray-200'}`}
-            >
-              <div className="mb-4">
-                <h4 className="font-bold text-gray-800">{plan.name}</h4>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
+            <div key={key} className="rounded-xl p-5"
+              style={{
+                background: isCurrent ? 'var(--surface)' : 'var(--white)',
+                border: `1px solid var(--border)`,
+                borderTop: `3px solid ${color}`,
+              }}>
+              <div className="mb-3">
+                <div className="text-[12px] font-mono font-semibold mb-1" style={{ color }}>{plan.name}</div>
+                <div className="text-[22px] font-bold" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>
                   {plan.price === 0 ? '無料' : `¥${plan.price.toLocaleString()}`}
-                  {plan.price > 0 && <span className="text-sm text-gray-500 font-normal">/月</span>}
-                </p>
+                  {plan.price > 0 && <span className="text-[11px] font-normal" style={{ color: 'var(--text3)' }}>/月</span>}
+                </div>
               </div>
 
-              <ul className="space-y-2 mb-6">
-                {features[key].map((f, i) => (
-                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">&#10003;</span>
+              <div className="space-y-1.5 mb-4">
+                {(FEATURES[key] || []).map((f, i) => (
+                  <div key={i} className="flex items-start gap-1.5 text-[11.5px]" style={{ color: 'var(--text2)' }}>
+                    <span style={{ color: 'var(--green)' }}>✓</span>
                     {f}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
 
               {isCurrent ? (
-                <button disabled className="w-full py-2 rounded-lg bg-gray-100 text-gray-500 text-sm font-medium">
+                <button disabled className="w-full py-2 rounded-lg text-[12px] font-medium"
+                  style={{ background: 'var(--border)', color: 'var(--text3)' }}>
                   現在のプラン
                 </button>
               ) : isDowngrade ? (
-                <button disabled className="w-full py-2 rounded-lg bg-gray-50 text-gray-400 text-sm">
-                  -
-                </button>
+                <button disabled className="w-full py-2 rounded-lg text-[12px]"
+                  style={{ background: 'var(--surface)', color: 'var(--text3)' }}>—</button>
               ) : (
-                <button
-                  onClick={() => handleUpgrade(key)}
-                  disabled={upgrading === key}
-                  className="w-full py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50"
-                >
+                <button onClick={() => handleUpgrade(key)} disabled={upgrading === key}
+                  className="w-full py-2 rounded-lg text-[12px] font-semibold text-white transition-all hover:-translate-y-px disabled:opacity-50"
+                  style={{ background: 'var(--text)' }}>
                   {upgrading === key ? '処理中...' : 'アップグレード'}
                 </button>
               )}
@@ -143,27 +140,6 @@ export default function Settings() {
           );
         })}
       </div>
-
-      {/* VIPサポート */}
-      {currentPlan?.plan === 'vip' && (
-        <div className="bg-yellow-50 rounded-xl border-2 border-yellow-300 p-6 mt-8">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">🌟 VIPサポート</h3>
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-gray-500">専用LINE</p>
-              <a href="https://lin.ee/xxxxx" className="text-blue-600 hover:underline font-medium">VIP専用LINEで相談する</a>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">コンサルティング予約</p>
-              <a href="#" className="text-blue-600 hover:underline font-medium">月次コンサルを予約する</a>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">優先サポート</p>
-              <p className="text-sm text-gray-700">VIPメンバーのお問い合わせは24時間以内に回答します</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
