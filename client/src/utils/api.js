@@ -77,6 +77,8 @@ export const adminApi = {
   getContracts: () => adminFetch('/admin/contracts'),
   getAgencies: () => adminFetch('/admin/agencies'),
   updateRole: (userId, role) => adminFetch(`/admin/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+  createAgencyCheckout: (agencyName, agencyEmail, amount) =>
+    adminFetch('/admin/agency-checkout', { method: 'POST', body: JSON.stringify({ agencyName, agencyEmail, amount }) }),
 };
 
 export const partnerApi = {
