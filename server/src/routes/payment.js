@@ -97,8 +97,10 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   try {
     const event = typeof req.body === 'string' ? JSON.parse(req.body) : JSON.parse(req.body.toString('utf8'));
 
-    // 決済完了イベント
-    if (event.type === 'payment.completed') {
+    // 決済完了イベント（completed / updated with COMPLETED status）
+    const isCompleted = event.type === 'payment.completed'
+      || (event.type === 'payment.updated' && event.data?.object?.payment?.status === 'COMPLETED');
+    if (isCompleted) {
       const payment = event.data.object.payment;
       const orderId = payment.orderId;
 

@@ -41,9 +41,10 @@ const aiLimiter = rateLimit({
 app.use('/api/ai/', aiLimiter);
 app.use('/api/lp/generate', aiLimiter);
 
-// LINE Webhookはraw bodyが必要（署名検証のため）
+// Webhookはraw bodyが必要（署名検証のため）
 // express.json()より前にルート登録
 app.use('/api/line/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 
 // その他のルートはJSONパース
 app.use(express.json());
