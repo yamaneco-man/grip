@@ -40,7 +40,7 @@ export default function PartnerDashboard() {
   return (
     <div>
       {/* KPI */}
-      <div className="grid grid-cols-4 gap-3.5 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-3.5 mb-5">
         <KPICard label="アクティブ契約数" value={activeCustomers.length} icon="🤝" color="purple"
           delta="+2" deltaDir="up" deltaText="今月の新規" />
         <KPICard label="今月の収益" value={`¥${monthlyRevenue.toLocaleString()}`} icon="💴" color="green"
@@ -52,7 +52,7 @@ export default function PartnerDashboard() {
       </div>
 
       {/* Body Grid */}
-      <div className="grid gap-3.5 mb-5" style={{ gridTemplateColumns: '1fr 300px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-3 lg:gap-3.5 mb-5">
         {/* Customer Table */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-[18px] py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>
@@ -160,7 +160,7 @@ export default function PartnerDashboard() {
       </div>
 
       {/* Bottom Grid */}
-      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 220px 260px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px_260px] gap-3 lg:gap-3.5">
         {/* Revenue Chart */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-[18px] py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>

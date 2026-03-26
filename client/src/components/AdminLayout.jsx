@@ -37,7 +37,7 @@ export default function AdminLayout() {
         user={{ initial: 'Y', name: 'Yama（オーナー）', sub: '管理者権限' }}
         onLogout={handleLogout}
       />
-      <div className="flex-1" style={{ marginLeft: '232px' }}>
+      <div className="flex-1 lg:ml-[232px]">
         <Topbar
           title="管理者ダッシュボード"
           subtitle="2026年3月"
@@ -53,7 +53,7 @@ export default function AdminLayout() {
             </>
           }
         />
-        <main className="pt-[82px] px-7 pb-6">
+        <main className="pt-[70px] px-4 pb-6 lg:pt-[82px] lg:px-7">
           <Outlet />
         </main>
       </div>

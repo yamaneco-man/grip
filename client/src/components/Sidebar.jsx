@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function Sidebar({ brand, badge, badgeClass, navSections, user, onLogout }) {
   const location = useLocation();
+  const [open, setOpen] = useState(false);
 
-  return (
-    <aside className="w-[232px] min-h-screen fixed top-0 left-0 z-50 flex flex-col border-r"
-      style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--border)' }}>
-
+  const sidebarContent = (
+    <>
       {/* Logo */}
       <div className="h-[58px] flex items-center px-5 gap-2.5 border-b"
         style={{ background: 'var(--white)', borderColor: 'var(--border)' }}>
@@ -20,6 +19,8 @@ export default function Sidebar({ brand, badge, badgeClass, navSections, user, o
             {badge}
           </span>
         )}
+        {/* モバイル閉じるボタン */}
+        <button onClick={() => setOpen(false)} className="lg:hidden ml-auto text-[20px]" style={{ color: 'var(--text3)' }}>✕</button>
       </div>
 
       {/* Navigation */}
@@ -33,7 +34,7 @@ export default function Sidebar({ brand, badge, badgeClass, navSections, user, o
                 ? location.pathname === item.path
                 : location.pathname.startsWith(item.path);
               return (
-                <Link key={item.path} to={item.path}
+                <Link key={item.path} to={item.path} onClick={() => setOpen(false)}
                   className="relative flex items-center gap-2.5 px-[18px] py-2 text-[13.5px] transition-all"
                   style={{
                     color: isActive ? 'var(--text)' : 'var(--text2)',
@@ -82,6 +83,34 @@ export default function Sidebar({ brand, badge, badgeClass, navSections, user, o
           ログアウト
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* モバイル: ハンバーガーボタン */}
+      <button onClick={() => setOpen(true)}
+        className="lg:hidden fixed top-3 left-3 z-[60] w-10 h-10 rounded-lg flex items-center justify-center text-[20px]"
+        style={{ background: 'var(--white)', border: '1px solid var(--border)', color: 'var(--text)' }}>
+        ☰
+      </button>
+
+      {/* モバイル: オーバーレイ */}
+      {open && (
+        <div className="lg:hidden fixed inset-0 z-[55] bg-black/30" onClick={() => setOpen(false)} />
+      )}
+
+      {/* モバイル: スライドサイドバー */}
+      <aside className={`lg:hidden fixed top-0 left-0 z-[60] w-[280px] min-h-screen flex flex-col border-r transition-transform duration-300 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--border)' }}>
+        {sidebarContent}
+      </aside>
+
+      {/* PC: 固定サイドバー */}
+      <aside className="hidden lg:flex w-[232px] min-h-screen fixed top-0 left-0 z-50 flex-col border-r"
+        style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--border)' }}>
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

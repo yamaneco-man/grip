@@ -25,7 +25,7 @@ export default function AdminDashboard() {
   return (
     <div>
       {/* KPI */}
-      <div className="grid grid-cols-4 gap-3.5 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-3.5 mb-5">
         <KPICard label="総MRR" value="¥0" icon="💴" color="green"
           deltaText="ローンチ後に計測開始" />
         <KPICard label="総ユーザー数" value={totalUsers} icon="👥" color="blue"
@@ -37,7 +37,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Body Grid */}
-      <div className="grid gap-3.5 mb-5" style={{ gridTemplateColumns: '1fr 300px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-3 lg:gap-3.5 mb-5">
         {/* Users Table */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>

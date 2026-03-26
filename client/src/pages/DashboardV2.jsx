@@ -47,7 +47,7 @@ export default function DashboardV2() {
   return (
     <div>
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-3.5 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-3.5 mb-5">
         <KPICard label="総友達数" value={totalFollowers} icon="👥" color="blue"
           delta={`+${Math.min(totalFollowers, 18)}`} deltaDir="up" deltaText="今月の新規" />
         <KPICard label="離脱リスク" value={riskCount} icon="🚨" color="red"
@@ -59,7 +59,7 @@ export default function DashboardV2() {
       </div>
 
       {/* Body Grid */}
-      <div className="grid gap-3.5 mb-5" style={{ gridTemplateColumns: '1fr 336px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_336px] gap-3 lg:gap-3.5 mb-5">
         {/* Friend Table */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>
@@ -72,7 +72,8 @@ export default function DashboardV2() {
             <Link to="/followers" className="px-2.5 py-1 rounded-md text-[12px] font-medium transition-all"
               style={{ border: '1px solid var(--border2)', color: 'var(--text2)' }}>全員表示 →</Link>
           </div>
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr>
                 {['名前', '冷め度', '成約確率', '状態', '登録'].map(h => (
@@ -141,6 +142,7 @@ export default function DashboardV2() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Alerts Panel */}
@@ -198,7 +200,7 @@ export default function DashboardV2() {
       </div>
 
       {/* Bottom Grid */}
-      <div className="grid gap-3.5" style={{ gridTemplateColumns: '280px 1fr 280px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-3 lg:gap-3.5">
         {/* MRR */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>

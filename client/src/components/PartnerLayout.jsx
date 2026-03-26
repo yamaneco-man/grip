@@ -38,7 +38,7 @@ export default function PartnerLayout() {
         user={{ initial: '山', name: '山田代理店', sub: 'パートナー / 50%還元', avatarBg: 'linear-gradient(135deg, var(--purple), #9c6fe4)' }}
         onLogout={handleLogout}
       />
-      <div className="flex-1" style={{ marginLeft: '232px' }}>
+      <div className="flex-1 lg:ml-[232px]">
         <Topbar
           title="パートナーダッシュボード"
           subtitle="2026年3月"
@@ -54,7 +54,7 @@ export default function PartnerLayout() {
             </>
           }
         />
-        <main className="pt-[82px] px-7 pb-6">
+        <main className="pt-[70px] px-4 pb-6 lg:pt-[82px] lg:px-7">
           <Outlet />
         </main>
       </div>
