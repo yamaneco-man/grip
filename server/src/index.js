@@ -44,6 +44,7 @@ app.use('/api/lp/generate', aiLimiter);
 // Webhookはraw bodyが必要（署名検証のため）
 // express.json()より前にルート登録
 app.use('/api/line/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/line/webhook/:userId', express.raw({ type: 'application/json' }));
 app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 
 // その他のルートはJSONパース
@@ -71,6 +72,7 @@ app.use('/api/payment', require('./routes/payment'));
 app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/step-config', require('./routes/step-config'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/line-settings', require('./routes/lineSettings'));
 
 // 本番環境: Reactビルド成果物を配信
 if (process.env.NODE_ENV === 'production') {

@@ -118,6 +118,12 @@ export const api = {
   updateStepConfig: (day, data) => apiFetch(`/step-config/${day}`, { method: 'PUT', body: JSON.stringify(data) }),
   resetStepConfig: () => apiFetch('/step-config/reset', { method: 'POST' }),
 
+  // LINE連携
+  getLineSettings: () => apiFetch('/line-settings/settings'),
+  saveLineSettings: (channelAccessToken, channelSecret) =>
+    apiFetch('/line-settings/settings', { method: 'PUT', body: JSON.stringify({ channelAccessToken, channelSecret }) }),
+  deleteLineSettings: () => apiFetch('/line-settings/settings', { method: 'DELETE' }),
+
   // 決済 / プラン
   getPlans: () => apiFetch('/payment/plans'),
   getCurrentPlan: () => apiFetch('/payment/current-plan'),

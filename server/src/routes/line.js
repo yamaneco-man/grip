@@ -6,14 +6,14 @@ const { handleWebhookEvent } = require('../services/line/webhook');
 const { authenticate } = require('../middleware/auth');
 const { supabaseAdmin } = require('../config/supabase');
 
-// LINE署名検証（express.raw()で受け取ったbodyを手動検証）
-function verifyLineSignature(req) {
+// LINE署名検証（チャネルシークレットを引数で受け取り、マルチテナント対応）
+function verifyLineSignature(req, channelSecret) {
   const signature = req.headers['x-line-signature'];
-  if (!signature) return false;
+  if (!signature || !channelSecret) return false;
 
   const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
   const hash = crypto
-    .createHmac('SHA256', lineConfig.channelSecret)
+    .createHmac('SHA256', channelSecret)
     .update(body)
     .digest('base64');
 
@@ -24,23 +24,53 @@ function verifyLineSignature(req) {
   }
 }
 
-// LINE Webhook受信（署名検証付き）
+// LINE Webhook受信 — デフォルト（MVP: 環境変数の1売り手）
 router.post('/webhook', async (req, res) => {
-  // 署名検証
-  if (!verifyLineSignature(req)) {
+  if (!verifyLineSignature(req, lineConfig.channelSecret)) {
     return res.status(401).json({ error: '署名検証に失敗しました' });
   }
 
-  // raw bodyをJSONにパース
   const body = Buffer.isBuffer(req.body) ? JSON.parse(req.body.toString()) : req.body;
-
-  // MVP: 環境変数で1売り手を設定
   const userId = process.env.DEFAULT_USER_ID;
 
   try {
-    await Promise.all(
-      body.events.map(event => handleWebhookEvent(event, userId))
-    );
+    await Promise.all(body.events.map(event => handleWebhookEvent(event, userId)));
+    res.status(200).json({ status: 'ok' });
+  } catch (err) {
+    console.error('Webhook処理エラー:', err);
+    res.status(500).json({ error: 'Webhook処理に失敗しました' });
+  }
+});
+
+// LINE Webhook受信 — マルチテナント（ユーザーごとのLINE公式アカウント）
+router.post('/webhook/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  // ユーザーのLINE設定をDBから取得
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('line_channel_secret, plan')
+    .eq('id', userId)
+    .single();
+
+  if (!user || !user.line_channel_secret) {
+    return res.status(404).send();
+  }
+
+  // FREEプランはWebhook受信不可
+  if (!user.plan || user.plan === 'free') {
+    return res.status(403).send();
+  }
+
+  // ユーザー固有のチャネルシークレットで署名検証
+  if (!verifyLineSignature(req, user.line_channel_secret)) {
+    return res.status(401).send();
+  }
+
+  const body = Buffer.isBuffer(req.body) ? JSON.parse(req.body.toString()) : req.body;
+
+  try {
+    await Promise.all(body.events.map(event => handleWebhookEvent(event, userId)));
     res.status(200).json({ status: 'ok' });
   } catch (err) {
     console.error('Webhook処理エラー:', err);
