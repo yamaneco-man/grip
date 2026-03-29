@@ -32,6 +32,14 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
+// 会員ログインのレート制限
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'ログイン試行回数の上限に達しました。しばらくしてからお試しください。' },
+});
+app.use('/api/member/member-login', loginLimiter);
+
 // AI系API専用レート制限（Claude API課金爆発防止）
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1時間
@@ -40,6 +48,12 @@ const aiLimiter = rateLimit({
 });
 app.use('/api/ai/', aiLimiter);
 app.use('/api/lp/generate', aiLimiter);
+app.use('/api/email/ai/', aiLimiter);
+app.use('/api/webinar/ai/', aiLimiter);
+app.use('/api/member/courses', (req, res, next) => {
+  if (req.path.includes('ai-generate')) return aiLimiter(req, res, next);
+  next();
+});
 
 // Webhookはraw bodyが必要（署名検証のため）
 // express.json()より前にルート登録
@@ -74,6 +88,19 @@ app.use('/api/step-config', require('./routes/step-config'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/line-settings', require('./routes/lineSettings'));
 app.use('/api/tracking-links', require('./routes/trackingLinks'));
+app.use('/api/tags', require('./routes/tags'));
+app.use('/api/analytics', require('./routes/analytics'));
+
+// 新機能ルート（UTAGE完全上位互換）
+app.use('/api/rich-menu', require('./routes/richMenu'));
+app.use('/api/rich-message', require('./routes/richMessage'));
+app.use('/api/email', require('./routes/email'));
+app.use('/api/member', require('./routes/memberSite'));
+app.use('/api/webinar', require('./routes/webinar'));
+app.use('/api/events', require('./routes/events'));
+app.use('/api/affiliate', require('./routes/affiliate'));
+app.use('/api/commerce', require('./routes/commerce'));
+app.use('/api/scenario', require('./routes/scenario'));
 
 // トラッキングリンクのリダイレクト（短縮URL）
 app.get('/t/:code', async (req, res) => {

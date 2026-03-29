@@ -13,6 +13,19 @@ import ObjectionHandling from './pages/ObjectionHandling';
 import ChurnScores from './pages/ChurnScores';
 import StepConfig from './pages/StepConfig';
 import Settings from './pages/Settings';
+import TagManager from './pages/TagManager';
+import FunnelAnalysis from './pages/FunnelAnalysis';
+import CrossAnalysis from './pages/CrossAnalysis';
+
+// 新機能ページ
+import RichMenuManager from './pages/RichMenuManager';
+import MessageComposer from './pages/MessageComposer';
+import EmailManager from './pages/EmailManager';
+import MemberSiteManager from './pages/MemberSiteManager';
+import WebinarManager from './pages/WebinarManager';
+import EventManager from './pages/EventManager';
+import AffiliateManager from './pages/AffiliateManager';
+import CommerceManager from './pages/CommerceManager';
 
 // Admin
 import AdminLogin from './pages/admin/AdminLogin';
@@ -55,7 +68,18 @@ export default function App() {
         <Route path="followers/:id" element={<FollowerDetail />} />
         <Route path="followers/:id/objection" element={<ObjectionHandling />} />
         <Route path="churn" element={<ChurnScores />} />
+        <Route path="tags" element={<TagManager />} />
+        <Route path="funnel" element={<FunnelAnalysis />} />
+        <Route path="cross-analysis" element={<CrossAnalysis />} />
         <Route path="step-config" element={<StepConfig />} />
+        <Route path="rich-menu" element={<RichMenuManager />} />
+        <Route path="message-composer" element={<MessageComposer />} />
+        <Route path="email" element={<EmailManager />} />
+        <Route path="member-site" element={<MemberSiteManager />} />
+        <Route path="webinar" element={<WebinarManager />} />
+        <Route path="events" element={<EventManager />} />
+        <Route path="affiliate" element={<AffiliateManager />} />
+        <Route path="commerce" element={<CommerceManager />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 

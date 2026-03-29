@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import Onboarding from '../pages/Onboarding';
 import { api } from '../utils/api';
 
 export default function UserLayout() {
@@ -9,9 +10,13 @@ export default function UserLayout() {
   const [profile, setProfile] = useState(null);
   const [followerCount, setFollowerCount] = useState(0);
   const [alertCount, setAlertCount] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    api.getProfile().then(setProfile).catch(() => {});
+    api.getProfile().then(p => {
+      setProfile(p);
+      if (p && !p.onboarding_completed) setShowOnboarding(true);
+    }).catch(() => {});
     api.getFollowers().then(f => setFollowerCount(f?.length || 0)).catch(() => {});
     api.getChurnScores().then(s => {
       setAlertCount((s || []).filter(x => x.churn_scores?.[0]?.score >= 80).length);
@@ -29,12 +34,31 @@ export default function UserLayout() {
       { path: '/followers', label: '友達一覧', icon: '👥', count: followerCount, countColor: 'blue' },
       { path: '/followers/chat', label: '個別チャット', icon: '💬' },
     ]},
-    { label: '配信', items: [
+    { label: 'LINE配信', items: [
+      { path: '/message-composer', label: 'メッセージ配信', icon: '✉' },
+      { path: '/rich-menu', label: 'リッチメニュー', icon: '☰' },
+      { path: '/tags', label: 'タグ & セグメント', icon: '🏷' },
+    ]},
+    { label: 'LP・ファネル', items: [
       { path: '/lp', label: 'LP管理', icon: '📄' },
       { path: '/lp/generate', label: 'LP生成', icon: '📣' },
+      { path: '/commerce', label: '商品・注文管理', icon: '🛒' },
+    ]},
+    { label: 'メール配信', items: [
+      { path: '/email', label: 'メール管理', icon: '📧' },
+    ]},
+    { label: 'コンテンツ', items: [
+      { path: '/member-site', label: '会員サイト', icon: '🎓' },
+      { path: '/webinar', label: '自動ウェビナー', icon: '🎥' },
+      { path: '/events', label: 'イベント・予約', icon: '📅' },
     ]},
     { label: '分析', items: [
       { path: '/churn', label: '離脱検知', icon: '🚨', count: alertCount > 0 ? `${alertCount}件` : undefined, countColor: 'red' },
+      { path: '/funnel', label: 'ファネル分析', icon: '📊' },
+      { path: '/cross-analysis', label: 'クロス分析', icon: '📈' },
+    ]},
+    { label: '収益化', items: [
+      { path: '/affiliate', label: 'アフィリエイト', icon: '🤝' },
     ]},
     ...(isVip ? [{ label: 'VIP限定', items: [
       { path: '/step-config', label: 'ステップ設計', icon: '🎯' },
@@ -51,6 +75,7 @@ export default function UserLayout() {
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
+      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       <Sidebar
         brand="GRIP"
         badge={plan}
