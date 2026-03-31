@@ -29,19 +29,26 @@ export default function UserLayout() {
   const navSections = [
     { label: 'メイン', items: [
       { path: '/', label: 'ダッシュボード', icon: '▣', exact: true },
+      { path: '/notifications', label: '通知', icon: '🔔' },
     ]},
     { label: '友達管理', items: [
       { path: '/followers', label: '友達一覧', icon: '👥', count: followerCount, countColor: 'blue' },
       { path: '/followers/chat', label: '個別チャット', icon: '💬' },
+      { path: '/saved-filters', label: 'カスタム検索', icon: '🔍' },
     ]},
     { label: 'LINE配信', items: [
+      { path: '/broadcast', label: '一斉配信', icon: '📢' },
       { path: '/message-composer', label: 'メッセージ配信', icon: '✉' },
+      { path: '/keyword-rules', label: 'キーワード応答', icon: '🤖' },
+      { path: '/reminders', label: 'リマインダ配信', icon: '⏰' },
+      { path: '/templates', label: 'テンプレート', icon: '📋' },
       { path: '/rich-menu', label: 'リッチメニュー', icon: '☰' },
       { path: '/tags', label: 'タグ & セグメント', icon: '🏷' },
     ]},
     { label: 'LP・ファネル', items: [
       { path: '/lp', label: 'LP管理', icon: '📄' },
       { path: '/lp/generate', label: 'LP生成', icon: '📣' },
+      { path: '/forms', label: '回答フォーム', icon: '📝' },
       { path: '/commerce', label: '商品・注文管理', icon: '🛒' },
     ]},
     { label: 'メール配信', items: [
@@ -51,14 +58,26 @@ export default function UserLayout() {
       { path: '/member-site', label: '会員サイト', icon: '🎓' },
       { path: '/webinar', label: '自動ウェビナー', icon: '🎥' },
       { path: '/events', label: 'イベント・予約', icon: '📅' },
+      { path: '/calendar', label: 'カレンダー予約', icon: '🗓' },
     ]},
     { label: '分析', items: [
       { path: '/churn', label: '離脱検知', icon: '🚨', count: alertCount > 0 ? `${alertCount}件` : undefined, countColor: 'red' },
       { path: '/funnel', label: 'ファネル分析', icon: '📊' },
       { path: '/cross-analysis', label: 'クロス分析', icon: '📈' },
+      { path: '/conversions', label: 'CV測定', icon: '🎯' },
+      { path: '/site-tracking', label: 'サイト計測', icon: '🌐' },
     ]},
     { label: '収益化', items: [
       { path: '/affiliate', label: 'アフィリエイト', icon: '🤝' },
+    ]},
+    { label: '自動化', items: [
+      { path: '/scheduled-actions', label: 'アクション管理', icon: '⚡' },
+    ]},
+    { label: '運用', items: [
+      { path: '/staff', label: 'スタッフ権限', icon: '👤' },
+      { path: '/operators', label: 'オペレーター', icon: '🎧' },
+      { path: '/data', label: 'データ入出力', icon: '📤' },
+      { path: '/sheets', label: 'スプレッドシート', icon: '📑' },
     ]},
     ...(isVip ? [{ label: 'VIP限定', items: [
       { path: '/step-config', label: 'ステップ設計', icon: '🎯' },

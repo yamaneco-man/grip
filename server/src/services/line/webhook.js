@@ -189,6 +189,39 @@ async function handleMessage(event, userId) {
     .update({ last_replied_at: new Date().toISOString() })
     .eq('id', follower.id);
 
+  // キーワード応答チェック（ルールベース → マッチしなければAI自動返信）
+  try {
+    const { matchKeywordRule } = require('../../routes/keywordRules');
+    const matchedRule = await matchKeywordRule(userId, content);
+    if (matchedRule) {
+      const responseText = matchedRule.response_type === 'text'
+        ? (matchedRule.response_content.text || matchedRule.response_content)
+        : JSON.stringify(matchedRule.response_content);
+
+      const { data: seller } = await supabaseAdmin
+        .from('users').select('line_channel_access_token').eq('id', userId).single();
+      if (seller?.line_channel_access_token) {
+        const { Client: LineClient } = require('@line/bot-sdk');
+        const lc = new LineClient({ channelAccessToken: seller.line_channel_access_token });
+        const messages = matchedRule.response_type === 'text'
+          ? [{ type: 'text', text: responseText }]
+          : Array.isArray(matchedRule.response_content) ? matchedRule.response_content : [matchedRule.response_content];
+        await lc.pushMessage(followerLineId, messages);
+        await supabaseAdmin.from('messages').insert({ follower_id: follower.id, direction: 'out', content: responseText });
+      }
+
+      // アクションタグ付与
+      if (matchedRule.action_tag_ids?.length) {
+        for (const tagId of matchedRule.action_tag_ids) {
+          await supabaseAdmin.from('follower_tags').insert({ follower_id: follower.id, tag_id: tagId }).catch(() => {});
+        }
+      }
+      return; // キーワードマッチしたのでAI応答はスキップ
+    }
+  } catch (e) {
+    console.error('キーワード応答エラー:', e.message);
+  }
+
   // AI自動返信（非同期で実行、エラーでもWebhookは200返す）
   generateAutoReply(follower.id, content).catch(e => {
     console.error('自動返信エラー:', e.message);

@@ -10,15 +10,40 @@ export default function DashboardV2() {
   const [lpCount, setLpCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // 新機能データ
+  const [broadcastCount, setBroadcastCount] = useState(0);
+  const [formCount, setFormCount] = useState(0);
+  const [keywordRuleCount, setKeywordRuleCount] = useState(0);
+  const [templateCount, setTemplateCount] = useState(0);
+  const [bookingCount, setBookingCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [conversionStats, setConversionStats] = useState([]);
+  const [recentBroadcasts, setRecentBroadcasts] = useState([]);
+
   useEffect(() => {
     Promise.all([
       api.getFollowers().catch(() => []),
       api.getChurnScores().catch(() => []),
       api.getLPs().catch(() => []),
-    ]).then(([f, c, l]) => {
+      api.getBroadcasts().catch(() => []),
+      api.getForms().catch(() => []),
+      api.getKeywordRules().catch(() => []),
+      api.getTemplates().catch(() => []),
+      api.getCalendarBookings().catch(() => []),
+      api.getUnreadCount().catch(() => ({ count: 0 })),
+      api.getConversionStats(30).catch(() => []),
+    ]).then(([f, c, l, br, fo, kr, tpl, bk, nc, cv]) => {
       setFollowers(f || []);
       setChurnScores(c || []);
       setLpCount((l || []).length);
+      setBroadcastCount((br || []).length);
+      setFormCount((fo || []).length);
+      setKeywordRuleCount((kr || []).length);
+      setTemplateCount((tpl || []).length);
+      setBookingCount((bk || []).filter(b => b.status === 'confirmed').length);
+      setUnreadCount(nc?.count || 0);
+      setConversionStats(cv || []);
+      setRecentBroadcasts((br || []).filter(b => b.status === 'sent').slice(0, 3));
       setLoading(false);
     });
   }, []);
@@ -28,6 +53,7 @@ export default function DashboardV2() {
   const avgClosing = followers.length > 0
     ? Math.round(followers.reduce((acc, f) => acc + (f.closing_scores?.[0]?.probability || 0), 0) / followers.length)
     : 0;
+  const totalCV = conversionStats.reduce((acc, s) => acc + (s.conversions || 0), 0);
 
   const getStatus = (score) => {
     if (score >= 70) return { label: 'HOT', cls: 'bg-[var(--green-l)] text-[var(--green)] border border-[var(--green-m)]' };
@@ -54,8 +80,33 @@ export default function DashboardV2() {
           delta={riskCount > 0 ? `${riskCount}件` : undefined} deltaDir="up" deltaText="要対応" />
         <KPICard label="平均成約確率" value={`${avgClosing}%`} icon="🎯" color="green"
           deltaText="全体平均" />
-        <KPICard label="月次MRR" value="¥0" icon="💴" color="amber"
-          deltaText="β版準備中" />
+        <KPICard label="CV数（30日）" value={totalCV} icon="📈" color="amber"
+          delta={totalCV > 0 ? `${conversionStats.length}ゴール` : undefined} deltaText="コンバージョン" />
+      </div>
+
+      {/* 新機能クイックステータス */}
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-3.5 mb-5">
+        {[
+          { label: '配信', value: broadcastCount, icon: '📢', path: '/broadcast', color: 'var(--blue)' },
+          { label: 'フォーム', value: formCount, icon: '📝', path: '/forms', color: 'var(--green)' },
+          { label: 'キーワード', value: keywordRuleCount, icon: '🤖', path: '/keyword-rules', color: 'var(--amber)' },
+          { label: 'テンプレート', value: templateCount, icon: '📋', path: '/templates', color: 'var(--text2)' },
+          { label: '予約', value: bookingCount, icon: '🗓', path: '/calendar', color: 'var(--green)' },
+          { label: '通知', value: unreadCount, icon: '🔔', path: '/notifications', color: unreadCount > 0 ? 'var(--red)' : 'var(--text3)' },
+        ].map(s => (
+          <Link key={s.label} to={s.path} className="rounded-xl p-3.5 transition-all hover:-translate-y-px"
+            style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[16px]">{s.icon}</span>
+              {s.value > 0 && (
+                <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded"
+                  style={{ background: 'var(--bg)', color: s.color }}>{s.value}</span>
+              )}
+            </div>
+            <div className="text-[20px] font-bold leading-none mb-0.5" style={{ color: s.color, letterSpacing: '-0.5px' }}>{s.value}</div>
+            <div className="text-[11px]" style={{ color: 'var(--text3)' }}>{s.label}</div>
+          </Link>
+        ))}
       </div>
 
       {/* Body Grid */}
@@ -192,7 +243,7 @@ export default function DashboardV2() {
             })}
             {churnScores.filter(s => s.churn_scores?.[0]?.score >= 50).length === 0 && (
               <div className="px-[18px] py-8 text-center text-[13px]" style={{ color: 'var(--text3)' }}>
-                アラートはありません 🎉
+                アラートはありません
               </div>
             )}
           </div>
@@ -200,23 +251,29 @@ export default function DashboardV2() {
       </div>
 
       {/* Bottom Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-3 lg:gap-3.5">
-        {/* MRR */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-3.5">
+        {/* 配信履歴 */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--white)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>
-            <div className="text-[14px] font-semibold" style={{ color: 'var(--text)' }}>収益サマリー</div>
-            <span className="text-[10.5px] font-mono font-medium px-2 py-0.5 rounded"
-              style={{ background: 'var(--bg)', color: 'var(--text2)', border: '1px solid var(--border2)' }}>β版</span>
+            <div className="text-[14px] font-semibold" style={{ color: 'var(--text)' }}>最近の配信</div>
+            <Link to="/broadcast" className="text-[11px] font-medium" style={{ color: 'var(--accent)' }}>すべて →</Link>
           </div>
-          <div className="p-5">
-            <div className="text-[36px] font-bold leading-none mb-1" style={{ letterSpacing: '-1.5px' }}>¥0</div>
-            <div className="text-[10.5px] font-mono mb-4" style={{ color: 'var(--text3)' }}>MONTHLY RECURRING REVENUE</div>
-            <div className="flex justify-between text-[11px] mb-1.5" style={{ color: 'var(--text2)' }}>
-              <span>目標 ¥98,000</span><span style={{ color: 'var(--text3)' }}>0%</span>
-            </div>
-            <div className="h-[7px] rounded-full overflow-hidden mb-3.5" style={{ background: 'var(--border)' }}>
-              <div className="h-full rounded-full" style={{ width: '0%', background: 'var(--text)' }} />
-            </div>
+          <div>
+            {recentBroadcasts.length > 0 ? recentBroadcasts.map(b => (
+              <div key={b.id} className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+                <div>
+                  <div className="text-[13px] font-medium" style={{ color: 'var(--text)' }}>{b.title}</div>
+                  <div className="text-[11px] font-mono" style={{ color: 'var(--text3)' }}>
+                    {b.sent_count || 0}名に送信
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--green-l)] text-[var(--green)]">送信済</span>
+              </div>
+            )) : (
+              <div className="px-5 py-6 text-center text-[12px]" style={{ color: 'var(--text3)' }}>
+                まだ配信履歴がありません
+              </div>
+            )}
           </div>
         </div>
 
@@ -248,6 +305,9 @@ export default function DashboardV2() {
                 </div>
               );
             })}
+            {followers.length === 0 && (
+              <div className="px-[18px] py-6 text-center text-[12px]" style={{ color: 'var(--text3)' }}>アクティビティなし</div>
+            )}
           </div>
         </div>
 
@@ -258,15 +318,16 @@ export default function DashboardV2() {
           </div>
           <div className="grid grid-cols-2" style={{ gap: '1px', background: 'var(--border)' }}>
             {[
-              { label: '新規追加', val: `+${Math.min(totalFollowers, 18)}`, color: 'var(--green)' },
-              { label: 'ブロック数', val: '0', color: 'var(--red)' },
-              { label: 'LP経由登録', val: `${lpCount}件`, color: 'var(--amber)' },
-              { label: '離脱防止', val: '0名', color: 'var(--green)' },
+              { label: '新規友達', val: `+${Math.min(totalFollowers, 18)}`, color: 'var(--green)' },
+              { label: 'コンバージョン', val: `${totalCV}件`, color: 'var(--blue)' },
+              { label: 'LP数', val: `${lpCount}件`, color: 'var(--amber)' },
+              { label: '配信数', val: `${broadcastCount}件`, color: 'var(--text)' },
+              { label: '予約（確定）', val: `${bookingCount}件`, color: 'var(--green)' },
+              { label: 'フォーム', val: `${formCount}件`, color: 'var(--blue)' },
             ].map(s => (
-              <div key={s.label} className="p-4" style={{ background: 'var(--white)' }}>
-                <div className="text-[11.5px] mb-1.5" style={{ color: 'var(--text2)' }}>{s.label}</div>
-                <div className="text-[22px] font-bold leading-none" style={{ color: s.color, letterSpacing: '-0.5px' }}>{s.val}</div>
-                <div className="text-[10.5px] font-mono mt-0.5" style={{ color: 'var(--text3)' }}>今月</div>
+              <div key={s.label} className="p-3.5" style={{ background: 'var(--white)' }}>
+                <div className="text-[11px] mb-1" style={{ color: 'var(--text2)' }}>{s.label}</div>
+                <div className="text-[20px] font-bold leading-none" style={{ color: s.color, letterSpacing: '-0.5px' }}>{s.val}</div>
               </div>
             ))}
           </div>

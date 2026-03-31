@@ -271,4 +271,103 @@ export const api = {
   exportScenario: (data) => apiFetch('/scenario/export', { method: 'POST', body: JSON.stringify(data) }),
   importScenario: (id) => apiFetch(`/scenario/${id}/import`, { method: 'POST' }),
   getBanLogs: () => apiFetch('/scenario/ban-logs'),
+
+  // ── 回答フォーム ──
+  getForms: () => apiFetch('/forms'),
+  createForm: (data) => apiFetch('/forms', { method: 'POST', body: JSON.stringify(data) }),
+  getForm: (id) => apiFetch(`/forms/${id}`),
+  updateForm: (id, data) => apiFetch(`/forms/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteForm: (id) => apiFetch(`/forms/${id}`, { method: 'DELETE' }),
+  getFormResponses: (id) => apiFetch(`/forms/${id}/responses`),
+
+  // ── 一斉配信 ──
+  getBroadcasts: () => apiFetch('/broadcast'),
+  createBroadcast: (data) => apiFetch('/broadcast', { method: 'POST', body: JSON.stringify(data) }),
+  sendBroadcast: (id) => apiFetch(`/broadcast/${id}/send`, { method: 'POST' }),
+  deleteBroadcast: (id) => apiFetch(`/broadcast/${id}`, { method: 'DELETE' }),
+
+  // ── キーワード応答 ──
+  getKeywordRules: () => apiFetch('/keyword-rules'),
+  createKeywordRule: (data) => apiFetch('/keyword-rules', { method: 'POST', body: JSON.stringify(data) }),
+  updateKeywordRule: (id, data) => apiFetch(`/keyword-rules/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteKeywordRule: (id) => apiFetch(`/keyword-rules/${id}`, { method: 'DELETE' }),
+
+  // ── リマインダ配信 ──
+  getReminders: () => apiFetch('/reminders'),
+  createReminder: (data) => apiFetch('/reminders', { method: 'POST', body: JSON.stringify(data) }),
+  updateReminder: (id, data) => apiFetch(`/reminders/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteReminder: (id) => apiFetch(`/reminders/${id}`, { method: 'DELETE' }),
+
+  // ── テンプレート管理 ──
+  getTemplates: () => apiFetch('/templates'),
+  createTemplate: (data) => apiFetch('/templates', { method: 'POST', body: JSON.stringify(data) }),
+  updateTemplate: (id, data) => apiFetch(`/templates/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteTemplate: (id) => apiFetch(`/templates/${id}`, { method: 'DELETE' }),
+
+  // ── カスタム検索 ──
+  getSavedFilters: () => apiFetch('/saved-filters'),
+  createSavedFilter: (data) => apiFetch('/saved-filters', { method: 'POST', body: JSON.stringify(data) }),
+  updateSavedFilter: (id, data) => apiFetch(`/saved-filters/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSavedFilter: (id) => apiFetch(`/saved-filters/${id}`, { method: 'DELETE' }),
+  executeSavedFilter: (id) => apiFetch(`/saved-filters/${id}/execute`, { method: 'POST' }),
+
+  // ── オペレーター ──
+  getOperators: () => apiFetch('/operators'),
+  createOperator: (data) => apiFetch('/operators', { method: 'POST', body: JSON.stringify(data) }),
+  updateOperator: (id, data) => apiFetch(`/operators/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteOperator: (id) => apiFetch(`/operators/${id}`, { method: 'DELETE' }),
+
+  // ── 通知 ──
+  getNotificationLogs: () => apiFetch('/notifications/logs'),
+  markNotificationRead: (id) => apiFetch(`/notifications/logs/${id}/read`, { method: 'PUT' }),
+  markAllRead: () => apiFetch('/notifications/logs/read-all', { method: 'PUT' }),
+  getNotificationSettings: () => apiFetch('/notifications/settings'),
+  saveNotificationSettings: (settings) => apiFetch('/notifications/settings', { method: 'PUT', body: JSON.stringify({ settings }) }),
+  getUnreadCount: () => apiFetch('/notifications/unread-count'),
+
+  // ── CSV入出力 ──
+  importFollowers: (rows) => apiFetch('/csv/import/followers', { method: 'POST', body: JSON.stringify({ rows }) }),
+  getImportJobs: () => apiFetch('/csv/import/jobs'),
+
+  // ── コンバージョン測定 ──
+  getConversionGoals: () => apiFetch('/conversions/goals'),
+  createConversionGoal: (data) => apiFetch('/conversions/goals', { method: 'POST', body: JSON.stringify(data) }),
+  deleteConversionGoal: (id) => apiFetch(`/conversions/goals/${id}`, { method: 'DELETE' }),
+  getConversionStats: (days) => apiFetch(`/conversions/stats?days=${days || 30}`),
+  getConversionEvents: (goalId) => apiFetch(`/conversions/events?goal_id=${goalId || ''}`),
+
+  // ── サイトスクリプト ──
+  getSiteTrackingScripts: () => apiFetch('/site-tracking'),
+  createSiteTrackingScript: (data) => apiFetch('/site-tracking', { method: 'POST', body: JSON.stringify(data) }),
+  deleteSiteTrackingScript: (id) => apiFetch(`/site-tracking/${id}`, { method: 'DELETE' }),
+  getSiteTrackingEmbed: (id) => apiFetch(`/site-tracking/${id}/embed`),
+  getSiteTrackingStats: (id, days) => apiFetch(`/site-tracking/${id}/stats?days=${days || 7}`),
+
+  // ── スタッフ権限 ──
+  getStaffMembers: () => apiFetch('/staff'),
+  createStaffMember: (data) => apiFetch('/staff', { method: 'POST', body: JSON.stringify(data) }),
+  updateStaffMember: (id, data) => apiFetch(`/staff/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteStaffMember: (id) => apiFetch(`/staff/${id}`, { method: 'DELETE' }),
+
+  // ── カレンダー予約 ──
+  getCalendarSlots: () => apiFetch('/calendar/slots'),
+  createCalendarSlot: (data) => apiFetch('/calendar/slots', { method: 'POST', body: JSON.stringify(data) }),
+  updateCalendarSlot: (id, data) => apiFetch(`/calendar/slots/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCalendarSlot: (id) => apiFetch(`/calendar/slots/${id}`, { method: 'DELETE' }),
+  getCalendarBookings: () => apiFetch('/calendar/bookings'),
+  updateCalendarBookingStatus: (id, status) => apiFetch(`/calendar/bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+
+  // ── スプレッドシート連携 ──
+  getSheetConnections: () => apiFetch('/sheets'),
+  createSheetConnection: (data) => apiFetch('/sheets', { method: 'POST', body: JSON.stringify(data) }),
+  updateSheetConnection: (id, data) => apiFetch(`/sheets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSheetConnection: (id) => apiFetch(`/sheets/${id}`, { method: 'DELETE' }),
+  syncSheet: (id) => apiFetch(`/sheets/${id}/sync`, { method: 'POST' }),
+
+  // ── スケジュールアクション ──
+  getScheduledActions: () => apiFetch('/scheduled-actions'),
+  createScheduledAction: (data) => apiFetch('/scheduled-actions', { method: 'POST', body: JSON.stringify(data) }),
+  updateScheduledAction: (id, data) => apiFetch(`/scheduled-actions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteScheduledAction: (id) => apiFetch(`/scheduled-actions/${id}`, { method: 'DELETE' }),
+  getScheduledActionLogs: (id) => apiFetch(`/scheduled-actions/${id}/logs`),
 };

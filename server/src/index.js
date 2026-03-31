@@ -102,6 +102,23 @@ app.use('/api/affiliate', require('./routes/affiliate'));
 app.use('/api/commerce', require('./routes/commerce'));
 app.use('/api/scenario', require('./routes/scenario'));
 
+// Lステップ完全上位互換機能
+app.use('/api/forms', require('./routes/forms'));
+app.use('/api/broadcast', require('./routes/broadcast'));
+app.use('/api/keyword-rules', require('./routes/keywordRules'));
+app.use('/api/reminders', require('./routes/reminderSeq'));
+app.use('/api/templates', require('./routes/templates'));
+app.use('/api/saved-filters', require('./routes/savedFilters'));
+app.use('/api/operators', require('./routes/operators'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/csv', require('./routes/csvIO'));
+app.use('/api/conversions', require('./routes/conversions'));
+app.use('/api/site-tracking', require('./routes/siteTracking'));
+app.use('/api/staff', require('./routes/staffMembers'));
+app.use('/api/calendar', require('./routes/calendar'));
+app.use('/api/sheets', require('./routes/sheets'));
+app.use('/api/scheduled-actions', require('./routes/scheduledActions'));
+
 // トラッキングリンクのリダイレクト（短縮URL）
 app.get('/t/:code', async (req, res) => {
   try {
