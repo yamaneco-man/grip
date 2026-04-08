@@ -35,12 +35,24 @@ LINE友達追加URL：${lineUrl}`;
 
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: LP_SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
   });
 
-  return response.content[0].text;
+  const html = response.content[0].text;
+
+  // HTMLが途中で切れていないかチェック
+  if (response.stop_reason === 'max_tokens') {
+    throw new Error('LP生成がトークン上限で途中終了しました。入力内容を短くして再試行してください。');
+  }
+
+  // 完全なHTMLか検証
+  if (!html.includes('</html>')) {
+    throw new Error('生成されたHTMLが不完全です。再度お試しください。');
+  }
+
+  return html;
 }
 
 /**
@@ -49,23 +61,41 @@ LINE友達追加URL：${lineUrl}`;
 async function createLP(userId, params) {
   const htmlContent = await generateLP(params);
 
+  const insertPayload = {
+    user_id: userId,
+    product_name: params.productName,
+    price: params.price ? parseInt(params.price) : null,
+    target: params.target,
+    strengths: params.strengths || null,
+    reviews: params.reviews || null,
+    line_url: params.lineUrl || null,
+    html_content: htmlContent,
+  };
+
   const { data, error } = await supabaseAdmin
     .from('lps')
-    .insert({
-      user_id: userId,
-      product_name: params.productName,
-      price: params.price ? parseInt(params.price) : null,
-      target: params.target,
-      strengths: params.strengths,
-      reviews: params.reviews,
-      line_url: params.lineUrl,
-      html_content: htmlContent,
-    })
+    .insert(insertPayload)
     .select()
-    .single();
+    .maybeSingle();
 
-  if (error) throw error;
-  return data;
+  if (error) {
+    console.error('LP DB保存エラー:', error.message, error.details, error.hint);
+    throw new Error('LP保存に失敗しました: ' + error.message);
+  }
+  if (!data) {
+    throw new Error('LP保存後のデータ取得に失敗しました');
+  }
+
+  // html_urlを設定（LP公開リンク用）
+  const htmlUrl = `/api/lp/view/${data.id}`;
+  const { error: updateError } = await supabaseAdmin
+    .from('lps')
+    .update({ html_url: htmlUrl })
+    .eq('id', data.id);
+
+  if (updateError) console.error('html_url更新エラー:', updateError.message);
+
+  return { ...data, html_url: htmlUrl };
 }
 
 /**
@@ -79,7 +109,12 @@ async function getLPs(userId) {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+
+  // html_urlが未設定の既存LPを補完
+  return data.map(lp => ({
+    ...lp,
+    html_url: lp.html_url || `/api/lp/view/${lp.id}`,
+  }));
 }
 
 /**
@@ -116,14 +151,15 @@ function sanitizeHTML(html) {
 async function serveLPHtml(lpId) {
   const { data, error } = await supabaseAdmin
     .from('lps')
-    .select('html_content')
+    .select('html_content, pv_count')
     .eq('id', lpId)
     .single();
 
   if (error) throw error;
 
   // PV数をアトミックにインクリメント
-  await supabaseAdmin.rpc('increment_pv', { lp_id: lpId }).catch(async () => {
+  await supabaseAdmin.rpc('increment_pv', { lp_id: lpId }).catch(async (rpcErr) => {
+    console.warn('increment_pv RPC失敗、fallbackで更新:', rpcErr.message);
     await supabaseAdmin
       .from('lps')
       .update({ pv_count: (data.pv_count || 0) + 1 })

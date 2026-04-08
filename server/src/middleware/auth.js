@@ -16,15 +16,27 @@ const authenticate = async (req, res, next) => {
   }
 
   // ユーザーのroleをDBから取得してreq.userに付与
+  // usersテーブルにレコードがない場合は自動作成（Auth⇔DB不整合の救済）
   try {
-    const { data: userData } = await supabaseAdmin
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
-      .select('role')
+      .select('role, plan')
       .eq('id', user.id)
       .single();
-    req.user = { ...user, role: userData?.role || 'user' };
+
+    if (userError || !userData) {
+      // usersテーブルにレコードがない → 自動作成
+      const { data: newUser } = await supabaseAdmin
+        .from('users')
+        .insert({ id: user.id, email: user.email, plan: 'free', role: 'user' })
+        .select('role, plan')
+        .single();
+      req.user = { ...user, role: newUser?.role || 'user', plan: newUser?.plan || 'free' };
+    } else {
+      req.user = { ...user, role: userData.role || 'user', plan: userData.plan || 'free' };
+    }
   } catch {
-    req.user = { ...user, role: 'user' };
+    req.user = { ...user, role: 'user', plan: 'free' };
   }
 
   next();

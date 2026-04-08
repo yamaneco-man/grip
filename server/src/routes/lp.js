@@ -24,8 +24,9 @@ router.post('/generate', authenticate, checkLPLimit, async (req, res) => {
     }
     const lp = await createLP(req.user.id, { productName, price, target, strengths, reviews, lineUrl });
     res.json(lp);
-  } catch {
-    res.status(500).json({ error: 'LP生成に失敗しました' });
+  } catch (err) {
+    console.error('LP生成エラー:', err.message, err.stack);
+    res.status(500).json({ error: err.message || 'LP生成に失敗しました' });
   }
 });
 
@@ -71,6 +72,7 @@ router.get('/view/:id', async (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(enhancedHtml);
   } catch (err) {
+    console.error('LP HTML配信エラー:', err.message);
     res.status(404).send('LPが見つかりません');
   }
 });
@@ -83,7 +85,8 @@ router.get('/:id', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'LPが見つかりません' });
     }
     res.json(lp);
-  } catch {
+  } catch (err) {
+    console.error('LP詳細取得エラー:', err.message);
     res.status(500).json({ error: 'データの取得に失敗しました' });
   }
 });
