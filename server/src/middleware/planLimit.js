@@ -11,11 +11,14 @@ async function checkLPLimit(req, res, next) {
       .from('users')
       .select('plan')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
-    if (userErr) throw userErr;
+    if (userErr) {
+      console.error('checkLPLimit: ユーザー取得エラー:', userErr.message);
+      throw userErr;
+    }
 
-    const plan = PLANS[user.plan || 'free'];
+    const plan = PLANS[user?.plan || 'free'];
     if (!plan.lpLimit) return next(); // 無制限
 
     // LP現存数をチェック（アカウントあたりの上限）
@@ -64,11 +67,14 @@ async function checkFollowerLimit(req, res, next) {
       .from('users')
       .select('plan')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
-    if (userErr) throw userErr;
+    if (userErr) {
+      console.error('checkFollowerLimit: ユーザー取得エラー:', userErr.message);
+      throw userErr;
+    }
 
-    const plan = PLANS[user.plan || 'free'];
+    const plan = PLANS[user?.plan || 'free'];
     if (!plan.followerLimit) return next(); // 無制限
 
     // 現在のフォロワー数をカウント
