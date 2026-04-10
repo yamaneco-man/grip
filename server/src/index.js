@@ -14,6 +14,12 @@ validateEnv();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// サーバータイムアウト設定（LP生成等のClaude API呼び出しに90秒以上かかる場合がある）
+const server = require('http').createServer(app);
+server.timeout = 120000; // 120秒
+server.keepAliveTimeout = 120000;
+server.headersTimeout = 125000;
+
 // ミドルウェア設定
 app.use(helmet());
 app.use(cors({
@@ -184,7 +190,7 @@ app.use((err, req, res, next) => {
 
 // テスト環境ではlisten不要（supertestが直接appを使う）
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`GRIP APIサーバーが起動しました: http://localhost:${PORT}`);
   });
 }
