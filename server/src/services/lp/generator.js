@@ -48,16 +48,64 @@ CVR（コンバージョン率）3%以上を叩き出すLPを、完全なHTMLと
 - 限定感・緊急性のある文言（ただし嘘はNG）
 - 最終CTA: LINE友達追加ボタン
 
-## デザイン要件（必須）
-- TailwindCSS CDN（<script src="https://cdn.tailwindcss.com"></script>）を使用
-- モバイルファースト: スマホで美しく、PCでも崩れない
-- フォント: Google Fonts の Noto Sans JP を読み込んで適用
-- 配色: プロフェッショナルで信頼感のある配色。メインカラー1色 + アクセント1色
-- CTAボタン: 大きく（py-4 px-8以上）、角丸、影付き、ホバーアニメーション。色は緑系（bg-emerald-500等）
-- セクション間: 十分な余白（py-16以上）
-- アイコン: 絵文字を効果的に使用（✅❌💡🎯📈等）
-- 背景: セクションごとに白/淡色を交互に使い、視覚的リズムを作る
-- テキスト: 読みやすいサイズ（本文16px以上）、適切な行間
+## デザイン要件（必須 — これがLPの品質を決める）
+
+### 技術基盤
+- TailwindCSS CDN: <script src="https://cdn.tailwindcss.com"></script>
+- Google Fonts: Noto Sans JP (weights: 400,500,700) を<link>で読み込み、body全体に適用
+- viewport meta タグ必須
+
+### 配色ルール（重要）
+- 商品イメージに合うメインカラーを1色選ぶ（blue, indigo, violet, teal, cyan等から）
+- CTAボタンは必ずメインカラーと補色関係のアクセントカラー（emerald, green, amber等）
+- 背景は白(white)と極薄グレー(gray-50/slate-50)を交互に
+- テキストは gray-900（見出し）と gray-600（本文）
+- 絶対にセクション全体を濃い色で塗りつぶさない
+
+### レイアウト
+- max-w-6xl mx-auto で中央寄せ（広がりすぎ防止）
+- セクション間の余白: py-20 lg:py-28（たっぷり取る）
+- カード: bg-white rounded-2xl shadow-lg p-8（角丸大きめ・影しっかり）
+- グリッド: sm:grid-cols-2 lg:grid-cols-3 gap-8
+
+### ファーストビュー（最重要）
+- 高さ: min-h-[80vh] で画面いっぱいに
+- 背景: 繊細なグラデーション（from-{color}-600 via-{color}-700 to-{color}-900）
+- テキスト: 白文字、キャッチコピーはtext-4xl lg:text-6xl font-bold
+- サブコピー: text-xl lg:text-2xl text-white/80
+- CTAボタン: text-lg py-5 px-10 rounded-full shadow-2xl + transform hover:scale-105 transition
+
+### CTAボタン（全箇所共通）
+- サイズ: text-lg font-bold py-5 px-10 以上
+- 形状: rounded-full（完全角丸）
+- 色: bg-emerald-500 hover:bg-emerald-600 text-white
+- 効果: shadow-2xl hover:shadow-emerald-500/25 transform hover:scale-105 transition-all duration-300
+- ボタンの上に小さく「＼ 無料で始める ／」のような吹き出しテキスト
+- 中央揃え: block mx-auto text-center
+
+### タイポグラフィ
+- 見出し（h2）: text-3xl lg:text-4xl font-bold text-gray-900 text-center mb-4
+- 見出し下に短い装飾ライン: <div class="w-16 h-1 bg-{accent} mx-auto mb-8"></div>
+- 本文: text-lg text-gray-600 leading-relaxed
+- 強調: font-bold text-gray-900 または text-{main-color}-600
+
+### お客様の声
+- カード形式: bg-white rounded-2xl shadow-lg p-8
+- 上部に大きな引用符（text-6xl text-{color}-200 font-serif）
+- 感想本文 + 氏名・属性（text-sm text-gray-400）
+- ★★★★★ の星評価を表示
+
+### FAQ
+- CSSのみでアコーディオン（details/summaryタグ使用）
+- summary: cursor-pointer py-4 font-bold text-lg border-b
+- 開閉アイコン: summary::marker を非表示にし、CSSで＋/−を表現
+
+### 絶対にやってはいけないこと
+- セクション全体を濃い背景色で塗りつぶすこと（ファーストビューのみ例外）
+- 絵文字を見出しの先頭に並べること（安っぽくなる）
+- 太字だらけにすること（メリハリがなくなる）
+- CTAボタンを小さくすること
+- 余白を狭くすること
 
 ## コピーライティングルール
 - 「〜できます」より「〜になれます」（変化を描く）
@@ -65,12 +113,13 @@ CVR（コンバージョン率）3%以上を叩き出すLPを、完全なHTMLと
 - 1文は短く（40文字以内推奨）
 - 数字を積極的に使う
 - 景表法・薬機法に違反する表現は絶対に使わない
+- 煽り表現（「機会を逃します」等）は使わない。ポジティブに誘導する
 
 ## 出力形式
 - <!DOCTYPE html>から</html>までの完全なHTML
 - コードブロック(\`\`\`)で囲まない。HTMLだけを出力
-- CSSはTailwindのユーティリティクラスで完結させる（<style>タグ最小限）
-- JavaScriptはFAQのアコーディオン等、最小限のみ`;
+- CSSはTailwindのユーティリティクラスで完結させる（<style>タグは最小限、details/summaryのスタイルのみ）
+- JavaScriptは一切不要（FAQはdetails/summaryで実装）`;
 
 /**
  * Claude APIでLP HTMLを生成
