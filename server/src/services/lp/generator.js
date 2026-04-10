@@ -53,7 +53,38 @@ CVR（コンバージョン率）3%以上を叩き出すLPを、完全なHTMLと
 ### 技術基盤
 - TailwindCSS CDN: <script src="https://cdn.tailwindcss.com"></script>
 - Google Fonts: Noto Sans JP (weights: 400,500,700) を<link>で読み込み、body全体に適用
+- Lucide Icons CDN: <script src="https://unpkg.com/lucide@latest"></script> を読み込み、アイコン表示に使う
 - viewport meta タグ必須
+
+### 画像・ビジュアル（重要 — LPの見た目を大きく左右する）
+
+#### ヒーロー画像
+- ファーストビューにUnsplash写真を背景またはサイドに配置
+- URLフォーマット: https://images.unsplash.com/photo-{ID}?w=1200&q=80
+- 商品カテゴリに合った写真を選ぶ。以下から適切なものを使用:
+  - ビジネス/マーケ: photo-1460925895917-afdab827c52f, photo-1553877522-43269d4ea984, photo-1522071820081-009f0129c71c
+  - 美容/サロン: photo-1560066984-138dadb4c035, photo-1522337360788-8b13dee7a37e
+  - 教育/コーチ: photo-1524178232363-1fb2b075b655, photo-1531482615713-2afd69097998
+  - 飲食: photo-1414235077428-338989a2e8c0, photo-1504674900247-0877df9cc836
+  - IT/テクノロジー: photo-1519389950473-47ba0277781c, photo-1551288049-bebda4e38f71
+  - 汎用: photo-1553484771-371a605b060b, photo-1497032628192-86f99b9a3293
+- background-imageで使う場合: bg-cover bg-center で表示し、暗いオーバーレイ(bg-black/50)をかける
+- <img>で使う場合: rounded-2xl shadow-xl object-cover
+
+#### 機能・ベネフィットのアイコン
+- Lucide Iconsを使用: <i data-lucide="icon-name"></i> + ページ末尾に <script>lucide.createIcons()</script>
+- 使えるアイコン例: zap, clock, shield-check, trending-up, users, star, check-circle, heart, target, sparkles, rocket, bar-chart, mail, message-circle, settings, award
+- アイコンをカラー丸背景の中に配置: <div class="w-14 h-14 bg-{color}-100 rounded-full flex items-center justify-center"><i data-lucide="zap" class="w-7 h-7 text-{color}-600"></i></div>
+
+#### お客様の声のアバター
+- UIアバター画像: https://ui-avatars.com/api/?name={名前}&background=random&size=80&font-size=0.4
+- 丸形: rounded-full w-14 h-14
+
+#### 装飾的ビジュアル
+- セクション間に斜め区切り線を入れる（SVGまたはCSS clip-path）:
+  <div class="h-16 bg-gray-50" style="clip-path: polygon(0 0, 100% 100%, 100% 100%, 0 100%)"></div>
+- 背景にぼかし円を配置して奥行き感を出す:
+  <div class="absolute -top-20 -right-20 w-72 h-72 bg-{color}-200 rounded-full blur-3xl opacity-30"></div>
 
 ### 配色ルール（重要）
 - 商品イメージに合うメインカラーを1色選ぶ（blue, indigo, violet, teal, cyan等から）
