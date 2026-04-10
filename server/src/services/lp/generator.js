@@ -1,196 +1,339 @@
 const { anthropic } = require('../../config/anthropic');
 const { supabaseAdmin } = require('../../config/supabase');
 
-// LP生成プロンプト
-const LP_SYSTEM_PROMPT = `あなたは日本のトップLP制作会社のアートディレクター兼コピーライターです。
-プロの制作会社が50万円以上で納品するクオリティのLPを、完全なHTMLで生成してください。
+/**
+ * AIにコンテンツJSONだけ生成させるプロンプト
+ */
+const CONTENT_SYSTEM_PROMPT = `あなたは日本トップクラスのLPコピーライターです。
+商品情報からLP用のコンテンツを生成し、指定されたJSON形式で出力してください。
 
-## 参考デザイン基準
-https://x-buzz.co.jp/writing/ のような、写真を大胆に使い、数字で説得し、信頼感のある日本のBtoB/BtoC向けLPを目指してください。
-
-## LP構成（この順番で配置）
-
-### 1. ファーストビュー（画面全体を使う没入型）
-- 全幅のUnsplash写真を背景に使用（暗いオーバーレイで文字を読みやすく）
-- キャッチコピー: text-5xl lg:text-7xl font-bold text-white。ターゲットの欲求を数字入りで突く
-- サブコピー: text-xl lg:text-2xl text-white/90。具体的なベネフィットを1行で
-- CTA第1: 大きなオレンジ系ボタン
-- 高さ: min-h-screen で画面いっぱい、flex items-center justify-center
-
-### 2. 実績数字セクション（ファーストビュー直後）
-- 横並び3〜4つの大きな数字パネル
-- 例: 「導入実績 150社」「満足度 98%」「作業時間 -80%」「継続率 95%」
-- 数字は text-5xl lg:text-7xl font-bold、単位は text-xl
-- 背景: 白またはメインカラーの極薄色
-- 数字がない場合は、サービスの強みを数値化して推測で作成（「3分で完成」「月額9,800円〜」等）
-
-### 3. 悩み共感セクション（問題提起）
-- 「こんなお悩み、ありませんか？」
-- 左側にUnsplash写真（悩んでいる人のイメージ）、右側にテキスト（lg:grid-cols-2）
-- 悩みを5〜6つ箇条書き。各項目の先頭にLucideアイコン（x-circle, alert-triangle等）
-- 悩みの最後に「一つでも当てはまるなら、解決策があります」
-
-### 4. 解決策の提示 + CTA第2
-- 商品・サービス名を大きく表示
-- 「○○が、すべて解決します」
-- サービス概要を2〜3行で説明
-- CTA第2: 「まずは無料で試してみる」
-
-### 5. 機能・ベネフィット（3〜6つ）
-- 各機能は大きなカード形式（lg:grid-cols-2 or lg:grid-cols-3）
-- カード構成: Lucideアイコン（カラー丸背景内）+ 見出し + 2〜3行の説明
-- 機能名ではなく「得られる変化」を見出しにする
-- カード: bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition
-
-### 6. 比較表（他社との差別化）
-- 「従来のやり方」vs「○○を使った場合」の2列比較
-- または「他社ツール」vs「当サービス」の機能比較表
-- 自社が優れている項目にチェックマーク、他社にバツ印
-- テーブル: rounded-2xl overflow-hidden shadow-lg
-
-### 7. 導入フロー（3〜5ステップ）
-- 「ご利用の流れ」セクション
-- 各ステップ: 丸い番号（1,2,3...）+ ステップ名 + 1行の説明
-- ステップ間を点線で接続（border-dashed）
-- 「最短○分で始められます」
-
-### 8. お客様の声（3件）+ CTA第3
-- カード形式: bg-white rounded-2xl shadow-xl p-8
-- 各カード: アバター画像（ui-avatars.com）+ 名前 + 属性 + ★★★★★
-- Before→After形式の感想（「導入前は○○だったが、今では○○に」）
-- 感想の下に「※個人の感想です。成果を保証するものではありません」
-- セクション末にCTA第3
-
-### 9. よくある質問（FAQ 5〜7件）
-- details/summaryタグでアコーディオン
-- 質問: font-bold text-lg、回答: text-gray-600
-- 購入前の不安（料金・解約・サポート・効果）を解消する内容
-
-### 10. 最終クロージング + CTA第4
-- 背景: メインカラーの濃いグラデーション + 白文字
-- 「今なら○○」「○名様限定」等の限定感（嘘はNG）
-- サービスの価値を1文で再提示
-- 最大サイズのCTAボタン
-
-## デザイン要件
-
-### 技術基盤
-- <script src="https://cdn.tailwindcss.com"></script>
-- Google Fonts: Noto Sans JP (400,500,700,900) を<link>で読み込み
-- <script src="https://unpkg.com/lucide@latest"></script> + ページ末尾に <script>lucide.createIcons()</script>
-- viewport meta必須
-
-### 画像
-- Unsplash写真を最低3枚使用（ファーストビュー + 悩み共感 + 機能セクション等）
-- URLフォーマット: https://images.unsplash.com/photo-{ID}?w=1200&q=80
-- 写真ID一覧:
-  - ビジネス: photo-1460925895917-afdab827c52f, photo-1553877522-43269d4ea984, photo-1522071820081-009f0129c71c, photo-1542744173-8e7e91415657
-  - マーケ/SNS: photo-1611162617213-7d7a39e9b1d7, photo-1432888622747-4eb9a8efeb07
-  - 美容/サロン: photo-1560066984-138dadb4c035, photo-1522337360788-8b13dee7a37e, photo-1570172619644-dfd03ed5d881
-  - 教育: photo-1524178232363-1fb2b075b655, photo-1531482615713-2afd69097998
-  - 飲食: photo-1414235077428-338989a2e8c0, photo-1504674900247-0877df9cc836
-  - IT: photo-1519389950473-47ba0277781c, photo-1551288049-bebda4e38f71
-  - 人物/チーム: photo-1522071820081-009f0129c71c, photo-1556761175-5973dc0f32e7
-  - 悩み: photo-1534528741775-53994a69daeb, photo-1507003211169-0a1dd7228f2d
-- 背景画像: style="background-image:url(...)" + bg-cover bg-center + 暗いオーバーレイ(bg-black/60)
-- インライン画像: w-full h-64 lg:h-96 object-cover rounded-2xl shadow-xl
-
-### 配色
-- メインカラー: 商品に合う色を1つ選ぶ（indigo, blue, violet, teal, slate等）
-- CTAボタン: オレンジ系（bg-orange-500 hover:bg-orange-600）— メインカラーと対比で目立たせる
-- 背景: 白(white)と極薄グレー(gray-50)を交互に。1〜2セクションだけメインカラーの極薄(indigo-50等)
-- テキスト: gray-900（見出し）、gray-600（本文）、white（暗い背景上）
-
-### CTAボタン（全箇所共通 — LPで最も重要な要素）
-- サイズ: text-lg lg:text-xl font-bold py-5 px-12
-- 形状: rounded-full
-- 色: bg-orange-500 hover:bg-orange-600 text-white
-- 効果: shadow-2xl hover:shadow-orange-500/30 transform hover:scale-105 transition-all duration-300
-- ボタン上に小さなテキスト: <p class="text-sm text-gray-500 mb-2 text-center">＼ 30秒で完了 ／</p>
-- 配置: 各CTAセクションで中央揃え
-- 合計4箇所以上に配置
-
-### レイアウト
-- 全幅セクション: w-full で端から端まで
-- コンテンツ幅: max-w-6xl mx-auto px-4 lg:px-8
-- セクション余白: py-20 lg:py-28
-- カード: bg-white rounded-2xl shadow-xl p-8 lg:p-10
-- グリッド: gap-8 lg:gap-10
-
-### タイポグラフィ
-- セクション見出し: text-3xl lg:text-5xl font-bold text-gray-900 text-center mb-6
-- 見出し下の装飾: <div class="w-20 h-1.5 bg-orange-500 mx-auto mb-12"></div>
-- 本文: text-lg lg:text-xl text-gray-600 leading-relaxed
-- 大きな数字: text-5xl lg:text-7xl font-black
-
-### 絶対にやってはいけないこと
-- 絵文字を見出しに使うこと（安っぽくなる。Lucideアイコンを使う）
-- 余白が狭いこと（各セクションpy-20以上）
-- CTAボタンが小さいこと（py-5 px-12以上）
-- 写真を使わないこと（最低3枚）
-- 全セクション同じ背景色にすること（交互に変える）
-- テキストだらけにすること（ビジュアルとテキストのバランス）
-
-## コピーライティングルール
+## ルール
 - 数字で語る（「多くの」→「150社以上の」）
 - 変化を描く（「できます」→「になれます」）
-- 1文40文字以内
-- 専門用語禁止（中学生でもわかる言葉）
-- Before→Afterを意識
+- 1文は短く（40文字以内）
+- 専門用語は使わない
+- Before→Afterを意識する
 - 景表法・薬機法違反表現は絶対NG
-- 煽り表現は避け、ポジティブに誘導
+- 口コミが提供されていない場合はリアルな口コミを3件創作する
 
 ## 出力形式
-- <!DOCTYPE html>から</html>までの完全なHTML。コードブロック不要
-- TailwindCSSのユーティリティクラスで完結（<style>はdetails/summaryのスタイルのみ）
-- <script>はlucide.createIcons()のみ`;
+以下のJSON形式のみを出力してください。説明文やコードブロックは不要です。JSONだけを出力。`;
+
+const CONTENT_USER_PROMPT = (params) => `以下の商品情報からLP用コンテンツを生成してください。
+
+商品名: ${params.productName}
+価格: ${params.price || '未定'}
+ターゲット: ${params.target}
+強み・実績: ${params.strengths || '推測して作成してください'}
+口コミ: ${params.reviews || '創作してください（※個人の感想です と注記必須）'}
+
+以下のJSON形式で出力:
+{
+  "headline": "キャッチコピー（ターゲットの欲求を数字入りで突く。20文字以内）",
+  "subheadline": "サブコピー（具体的なベネフィット1行。30文字以内）",
+  "stats": [
+    { "number": "3分", "label": "でLP完成" },
+    { "number": "80%", "label": "作業時間削減" },
+    { "number": "9,800円", "label": "月額〜" }
+  ],
+  "problems": [
+    "ターゲットの悩み1",
+    "ターゲットの悩み2",
+    "ターゲットの悩み3",
+    "ターゲットの悩み4",
+    "ターゲットの悩み5"
+  ],
+  "solution": "○○が、すべて解決します。サービス概要を2行で。",
+  "benefits": [
+    { "icon": "zap", "title": "得られる変化の見出し", "desc": "2行の説明文" },
+    { "icon": "clock", "title": "得られる変化の見出し", "desc": "2行の説明文" },
+    { "icon": "trending-up", "title": "得られる変化の見出し", "desc": "2行の説明文" },
+    { "icon": "shield-check", "title": "得られる変化の見出し", "desc": "2行の説明文" },
+    { "icon": "users", "title": "得られる変化の見出し", "desc": "2行の説明文" },
+    { "icon": "star", "title": "得られる変化の見出し", "desc": "2行の説明文" }
+  ],
+  "comparison": [
+    { "feature": "機能名1", "others": false, "ours": true },
+    { "feature": "機能名2", "others": false, "ours": true },
+    { "feature": "機能名3", "others": true, "ours": true },
+    { "feature": "機能名4", "others": false, "ours": true },
+    { "feature": "機能名5", "others": false, "ours": true }
+  ],
+  "steps": [
+    { "title": "ステップ1の名前", "desc": "1行の説明" },
+    { "title": "ステップ2の名前", "desc": "1行の説明" },
+    { "title": "ステップ3の名前", "desc": "1行の説明" }
+  ],
+  "testimonials": [
+    { "name": "T.K.", "role": "コーチ・30代", "text": "導入前は○○だったが、今では○○に。Before→Afterで書く。" },
+    { "name": "M.S.", "role": "美容サロンオーナー・40代", "text": "Before→After形式の感想" },
+    { "name": "A.Y.", "role": "個人事業主・30代", "text": "Before→After形式の感想" }
+  ],
+  "faq": [
+    { "q": "質問1", "a": "回答1" },
+    { "q": "質問2", "a": "回答2" },
+    { "q": "質問3", "a": "回答3" },
+    { "q": "質問4", "a": "回答4" },
+    { "q": "質問5", "a": "回答5" }
+  ],
+  "closing": "最後の一押しコピー（限定感・価値を1文で）",
+  "ctaText": "CTAボタンのテキスト（例: 無料で始める）",
+  "ctaSub": "CTAボタン上の小さなテキスト（例: ＼ 30秒で完了 ／）"
+}`;
 
 /**
- * Claude APIでLP HTMLを生成
+ * テンプレートHTMLを生成
+ */
+function buildHTML(content, lineUrl, productName) {
+  const c = content;
+  const cta = lineUrl || '#';
+
+  const benefitsHTML = c.benefits.map(b => `
+        <div class="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+          <div class="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center mb-5">
+            <i data-lucide="${b.icon}" class="w-7 h-7 text-indigo-600"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">${b.title}</h3>
+          <p class="text-gray-600 leading-relaxed">${b.desc}</p>
+        </div>`).join('\n');
+
+  const statsHTML = c.stats.map(s => `
+          <div class="text-center">
+            <div class="text-4xl lg:text-6xl font-black text-indigo-600">${s.number}</div>
+            <div class="text-gray-600 mt-2 text-lg">${s.label}</div>
+          </div>`).join('\n');
+
+  const problemsHTML = c.problems.map(p => `
+            <li class="flex items-start gap-4">
+              <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i data-lucide="x" class="w-4 h-4 text-red-500"></i>
+              </div>
+              <span class="text-lg text-gray-700">${p}</span>
+            </li>`).join('\n');
+
+  const comparisonHTML = c.comparison.map(r => `
+            <tr class="border-b border-gray-100">
+              <td class="py-4 px-6 text-gray-700">${r.feature}</td>
+              <td class="py-4 px-6 text-center">${r.others ? '<span class="text-gray-400">△</span>' : '<span class="text-red-400 font-bold">✕</span>'}</td>
+              <td class="py-4 px-6 text-center"><span class="text-emerald-500 font-bold">✓</span></td>
+            </tr>`).join('\n');
+
+  const stepsHTML = c.steps.map((s, i) => `
+          <div class="flex items-start gap-6">
+            <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">${i + 1}</div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 mb-1">${s.title}</h3>
+              <p class="text-gray-600">${s.desc}</p>
+            </div>
+          </div>`).join('\n          <div class="w-0.5 h-8 bg-indigo-200 ml-6"></div>\n');
+
+  const testimonialsHTML = c.testimonials.map(t => `
+          <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="flex items-center gap-4 mb-4">
+              <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=6366f1&color=fff&size=80&font-size=0.4" class="w-14 h-14 rounded-full" alt="${t.name}">
+              <div>
+                <div class="font-bold text-gray-900">${t.name}</div>
+                <div class="text-sm text-gray-500">${t.role}</div>
+              </div>
+            </div>
+            <div class="text-yellow-400 mb-3">★★★★★</div>
+            <p class="text-gray-600 leading-relaxed">${t.text}</p>
+          </div>`).join('\n');
+
+  const faqHTML = c.faq.map(f => `
+          <details class="group border-b border-gray-200">
+            <summary class="flex items-center justify-between cursor-pointer py-5 text-lg font-bold text-gray-900">
+              <span>${f.q}</span>
+              <span class="text-2xl text-gray-400 group-open:rotate-45 transition-transform duration-200">+</span>
+            </summary>
+            <div class="pb-5 text-gray-600 leading-relaxed">${f.a}</div>
+          </details>`).join('\n');
+
+  const ctaBlock = `
+      <div class="text-center">
+        <p class="text-sm text-gray-500 mb-3">${c.ctaSub}</p>
+        <a href="${cta}" class="inline-block bg-orange-500 hover:bg-orange-600 text-white text-lg lg:text-xl font-bold py-5 px-14 rounded-full shadow-2xl hover:shadow-orange-500/30 transform hover:scale-105 transition-all duration-300">
+          ${c.ctaText}
+        </a>
+      </div>`;
+
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${productName}</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"><\/script>
+  <style>
+    body { font-family: 'Noto Sans JP', sans-serif; }
+    details summary::-webkit-details-marker { display: none; }
+    details summary { list-style: none; }
+  </style>
+</head>
+<body class="bg-white text-gray-900">
+
+  <!-- ファーストビュー -->
+  <section class="relative min-h-screen flex items-center justify-center" style="background-image: url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1400&q=80'); background-size: cover; background-position: center;">
+    <div class="absolute inset-0 bg-gradient-to-br from-black/70 via-black/60 to-indigo-900/50"></div>
+    <div class="relative z-10 text-center px-4 max-w-5xl mx-auto">
+      <h1 class="text-4xl lg:text-7xl font-black text-white leading-tight mb-6">${c.headline}</h1>
+      <p class="text-xl lg:text-2xl text-white/90 mb-10">${c.subheadline}</p>
+${ctaBlock.replace('text-gray-500', 'text-white/60')}
+    </div>
+  </section>
+
+  <!-- 実績数字 -->
+  <section class="py-16 bg-white">
+    <div class="max-w-5xl mx-auto px-4">
+      <div class="grid grid-cols-${c.stats.length} gap-8">
+${statsHTML}
+      </div>
+    </div>
+  </section>
+
+  <!-- 悩み共感 -->
+  <section class="py-20 lg:py-28 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-4 lg:px-8">
+      <h2 class="text-3xl lg:text-5xl font-bold text-center mb-6">こんなお悩み、ありませんか？</h2>
+      <div class="w-20 h-1.5 bg-orange-500 mx-auto mb-12"></div>
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80" class="w-full h-80 object-cover rounded-2xl shadow-xl" alt="悩み">
+        </div>
+        <ul class="space-y-5">
+${problemsHTML}
+        </ul>
+      </div>
+      <p class="text-center text-xl text-gray-700 mt-12 font-medium">一つでも当てはまるなら、<span class="text-indigo-600 font-bold">解決策があります</span></p>
+    </div>
+  </section>
+
+  <!-- 解決策 + CTA -->
+  <section class="py-20 lg:py-28 bg-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-3xl lg:text-5xl font-bold mb-6">${productName}</h2>
+      <div class="w-20 h-1.5 bg-orange-500 mx-auto mb-8"></div>
+      <p class="text-xl text-gray-600 leading-relaxed mb-12">${c.solution}</p>
+${ctaBlock}
+    </div>
+  </section>
+
+  <!-- ベネフィット -->
+  <section class="py-20 lg:py-28 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-4 lg:px-8">
+      <h2 class="text-3xl lg:text-5xl font-bold text-center mb-6">選ばれる理由</h2>
+      <div class="w-20 h-1.5 bg-orange-500 mx-auto mb-12"></div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+${benefitsHTML}
+      </div>
+    </div>
+  </section>
+
+  <!-- 比較表 -->
+  <section class="py-20 lg:py-28 bg-white">
+    <div class="max-w-4xl mx-auto px-4">
+      <h2 class="text-3xl lg:text-5xl font-bold text-center mb-6">他社との違い</h2>
+      <div class="w-20 h-1.5 bg-orange-500 mx-auto mb-12"></div>
+      <div class="rounded-2xl shadow-xl overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-gray-900 text-white">
+              <th class="py-4 px-6 text-left">機能</th>
+              <th class="py-4 px-6 text-center">他社ツール</th>
+              <th class="py-4 px-6 text-center bg-indigo-600">${productName}</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white">
+${comparisonHTML}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 導入フロー -->
+  <section class="py-20 lg:py-28 bg-gray-50">
+    <div class="max-w-3xl mx-auto px-4">
+      <h2 class="text-3xl lg:text-5xl font-bold text-center mb-6">ご利用の流れ</h2>
+      <div class="w-20 h-1.5 bg-orange-500 mx-auto mb-12"></div>
+      <div class="space-y-0">
+${stepsHTML}
+      </div>
+    </div>
+  </section>
+
+  <!-- お客様の声 + CTA -->
+  <section class="py-20 lg:py-28 bg-white">
+    <div class="max-w-6xl mx-auto px-4 lg:px-8">
+      <h2 class="text-3xl lg:text-5xl font-bold text-center mb-6">お客様の声</h2>
+      <div class="w-20 h-1.5 bg-orange-500 mx-auto mb-12"></div>
+      <div class="grid md:grid-cols-3 gap-8 mb-4">
+${testimonialsHTML}
+      </div>
+      <p class="text-sm text-gray-400 text-center mb-12">※個人の感想です。成果を保証するものではありません。</p>
+${ctaBlock}
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-20 lg:py-28 bg-gray-50">
+    <div class="max-w-3xl mx-auto px-4">
+      <h2 class="text-3xl lg:text-5xl font-bold text-center mb-6">よくある質問</h2>
+      <div class="w-20 h-1.5 bg-orange-500 mx-auto mb-12"></div>
+${faqHTML}
+    </div>
+  </section>
+
+  <!-- 最終クロージング -->
+  <section class="py-20 lg:py-28 bg-gradient-to-br from-indigo-700 via-indigo-800 to-indigo-900">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-3xl lg:text-5xl font-bold text-white mb-8">${c.closing}</h2>
+${ctaBlock.replace('text-gray-500', 'text-white/60')}
+    </div>
+  </section>
+
+  <!-- フッター -->
+  <footer class="py-8 bg-gray-900 text-center text-gray-500 text-sm">
+    <p>&copy; ${new Date().getFullYear()} ${productName}. All rights reserved.</p>
+  </footer>
+
+  <script>lucide.createIcons();<\/script>
+</body>
+</html>`;
+}
+
+/**
+ * Claude APIでコンテンツJSONを生成 → テンプレートに埋め込み
  */
 async function generateLP({ productName, price, target, strengths, reviews, lineUrl }) {
-  const userPrompt = `以下の情報を元に、高品質なLPを生成してください。
-
-【商品・サービス名】
-${productName}
-
-【価格】
-${price || '未定'}
-
-【ターゲット（誰に届けたいか）】
-${target}
-
-【強み・実績・特徴】
-${strengths || '特になし（一般的な強みを推測して書いてください）'}
-
-【お客様の声・口コミ】
-${reviews || 'なし（リアルな口コミを3件創作してください。ただし「個人の感想です」と注記を入れること）'}
-
-【LINE友達追加URL】
-${lineUrl || '#'}
-
-上記の情報から、ターゲットに最も刺さるLPを生成してください。情報が少ない項目は、商品特性から推測して補完してください。`;
-
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 16000,
-    system: LP_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
+    max_tokens: 4000,
+    system: CONTENT_SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: CONTENT_USER_PROMPT({ productName, price, target, strengths, reviews }) }],
   });
 
-  const html = response.content[0].text;
+  const raw = response.content[0].text.trim();
 
-  // HTMLが途中で切れていないかチェック
-  if (response.stop_reason === 'max_tokens') {
-    throw new Error('LP生成がトークン上限で途中終了しました。入力内容を短くして再試行してください。');
+  // JSONパース
+  let content;
+  try {
+    content = JSON.parse(raw);
+  } catch {
+    // コードブロックで囲まれている場合の対応
+    const match = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (match) {
+      content = JSON.parse(match[1].trim());
+    } else {
+      console.error('LP JSON parse error. Raw:', raw.substring(0, 500));
+      throw new Error('LP生成結果のパースに失敗しました。再度お試しください。');
+    }
   }
 
-  // 完全なHTMLか検証
-  if (!html.includes('</html>')) {
-    throw new Error('生成されたHTMLが不完全です。再度お試しください。');
-  }
-
-  return html;
+  return buildHTML(content, lineUrl, productName);
 }
 
 /**
@@ -224,7 +367,6 @@ async function createLP(userId, params) {
     throw new Error('LP保存後のデータ取得に失敗しました');
   }
 
-  // html_urlを設定（LP公開リンク用）
   const htmlUrl = `/api/lp/view/${data.id}`;
   const { error: updateError } = await supabaseAdmin
     .from('lps')
@@ -247,8 +389,6 @@ async function getLPs(userId) {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-
-  // html_urlが未設定の既存LPを補完
   return data.map(lp => ({
     ...lp,
     html_url: lp.html_url || `/api/lp/view/${lp.id}`,
@@ -270,7 +410,7 @@ async function getLP(lpId) {
 }
 
 /**
- * HTMLサニタイズ — scriptタグ・イベントハンドラを除去
+ * HTMLサニタイズ
  */
 function sanitizeHTML(html) {
   if (!html) return html;
@@ -284,7 +424,7 @@ function sanitizeHTML(html) {
 }
 
 /**
- * LP HTML配信（公開ページ用）— XSSサニタイズ付き
+ * LP HTML配信（公開ページ用）
  */
 async function serveLPHtml(lpId) {
   const { data, error } = await supabaseAdmin
@@ -295,7 +435,6 @@ async function serveLPHtml(lpId) {
 
   if (error) throw error;
 
-  // PV数をインクリメント
   const { error: rpcErr } = await supabaseAdmin.rpc('increment_pv', { lp_id: lpId });
   if (rpcErr) {
     console.warn('increment_pv RPC失敗、fallbackで更新:', rpcErr.message);
@@ -309,10 +448,9 @@ async function serveLPHtml(lpId) {
 }
 
 /**
- * LPメタ情報更新（HTML再生成なし）
+ * LPメタ情報更新
  */
 async function updateLP(lpId, userId, params) {
-  // 自分のLPのみ更新可能
   const { data: existing, error: findError } = await supabaseAdmin
     .from('lps')
     .select('id, user_id')
@@ -342,7 +480,7 @@ async function updateLP(lpId, userId, params) {
 }
 
 /**
- * LP削除（自分のLPのみ）
+ * LP削除
  */
 async function deleteLP(lpId, userId) {
   const { data: existing, error: findError } = await supabaseAdmin
