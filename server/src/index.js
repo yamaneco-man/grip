@@ -20,6 +20,9 @@ server.timeout = 120000; // 120秒
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 125000;
 
+// Railwayはリバースプロキシ経由のためtrust proxyを有効化
+app.set('trust proxy', 1);
+
 // ミドルウェア設定
 app.use(helmet());
 app.use(cors({
