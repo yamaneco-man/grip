@@ -85,6 +85,22 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Anthropic API接続テスト（デバッグ用・本番では削除）
+app.get('/api/test-anthropic', async (req, res) => {
+  try {
+    const { anthropic } = require('./config/anthropic');
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 50,
+      messages: [{ role: 'user', content: 'Say "OK" in one word.' }],
+    });
+    res.json({ status: 'ok', reply: response.content[0].text });
+  } catch (err) {
+    console.error('Anthropic test error:', err.message, err.stack);
+    res.status(500).json({ status: 'error', message: err.message, type: err.constructor.name });
+  }
+});
+
 // ルート登録
 app.use('/api/lp', require('./routes/lp'));
 app.use('/api/line', require('./routes/line'));
