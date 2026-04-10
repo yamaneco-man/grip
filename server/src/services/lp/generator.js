@@ -157,14 +157,15 @@ async function serveLPHtml(lpId) {
 
   if (error) throw error;
 
-  // PV数をアトミックにインクリメント
-  await supabaseAdmin.rpc('increment_pv', { lp_id: lpId }).catch(async (rpcErr) => {
+  // PV数をインクリメント
+  const { error: rpcErr } = await supabaseAdmin.rpc('increment_pv', { lp_id: lpId });
+  if (rpcErr) {
     console.warn('increment_pv RPC失敗、fallbackで更新:', rpcErr.message);
     await supabaseAdmin
       .from('lps')
       .update({ pv_count: (data.pv_count || 0) + 1 })
       .eq('id', lpId);
-  });
+  }
 
   return sanitizeHTML(data.html_content);
 }
